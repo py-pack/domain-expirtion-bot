@@ -1,4 +1,4 @@
-# Domain Expiration 3
+# Domain Expiration Slim
 
 Данный проект собирает данные о доменах
 
