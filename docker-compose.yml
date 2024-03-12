@@ -1,0 +1,21 @@
+version: '3.4'
+
+services:
+    app:
+        build:
+            context: .
+            dockerfile: Dockerfile
+#            target: production
+            target: dev
+        image: "ldi/dom_exp:0.1"
+        container_name: "dom_exp_app"
+        restart: always
+        env_file:
+            - .env
+        ports:
+            - 9001:9000
+        volumes:
+            - ./app:/app
+            - ./pyproject.toml:/app
+            - ./poetry.lock:/app
+        command: ["uvicorn", "main:app", "--reload", "--host", "${HOST:-0.0.0.0}", "--port", "${PORT:-9000}"]
