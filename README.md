@@ -7,13 +7,13 @@
     
         cp .env.example .env
 
-1. Заполняем секретный ключ в 32 символа `X_TOKEN`
+2. Заполняем секретный ключ в 32 символа `X_TOKEN`
 
-1. Запускаем через докер
+3. Запускаем через докер
 
         docker compose up --build
 
-1. Можем выполнить запрос
+4. Можем выполнить запрос
 
         curl --location 'http://localhost:9001/api/domain/expiration?domain_name=google.com' \
              --header 'Token-X: your_32_char_static_token_here'
