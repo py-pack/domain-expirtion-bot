@@ -1,0 +1,45 @@
+services:
+    api:
+        build:
+            context: ./api
+            dockerfile: Dockerfile
+#            target: dev
+        container_name: ${NAME_SERVICE:-domain_ex}_api
+        restart: unless-stopped
+        ports:
+            - "10431:9000"
+        volumes:
+            - ./api:/app
+        env_file:
+          - .env
+        depends_on:
+            - db
+            - redis
+        command: uvicorn main:app --host 0.0.0.0 --port 9000 --reload
+
+    db:
+        image: leadsdoit/postgres:17.2
+        container_name: ${NAME_SERVICE:-domain_ex}_db_pgsql
+        restart: unless-stopped
+        volumes:
+            - ./.db/data:/var/lib/postgresql/data
+            - ./.db/dump:/backup
+        ports:
+            - "11431:5432"
+        environment:
+            POSTGRES_DB: ${APP__DB__POSTGRES_DB}
+            POSTGRES_USER: ${APP__DB__POSTGRES_USER}
+            POSTGRES_PASSWORD: ${APP__DB__POSTGRES_PASSWORD}
+
+    redis:
+        image: redis:7-alpine3.19
+        container_name: ${NAME_SERVICE:-domain_ex}_redis
+        restart: unless-stopped
+        volumes:
+            - domain_ex-redis:/data
+        ports:
+            - "11432:6379"
+
+volumes:
+    domain_ex-redis:
+        driver: local
