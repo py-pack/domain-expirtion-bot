@@ -1,8 +1,9 @@
+import uvicorn
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse, StreamingResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from tools import check_domain
+from app.tools import check_domain
 
 app = FastAPI()
 
@@ -50,4 +51,9 @@ app.include_router(router=check_domain.router, prefix='/api')
 
 @app.get("/")
 async def root():
-    return StreamingResponse('')
+    # return StreamingResponse('')
+    return {"message": "Hello from FastAPI in Docker!"}
+
+
+if __name__ == "__main__":
+    uvicorn.run("main:app", host="0.0.0.0", port=10432, reload=True)

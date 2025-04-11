@@ -3,6 +3,11 @@
 GET http://localhost:9001/api/domain/expiration?domain_name=google.com
 Accept: application/json
 
+### Local
+GET http://localhost:10431/api/domain/expiration?domain_name=google.com
+Accept: application/json
+Token-X: your_32_char_static_token_here
+
 ###
 
 GET http://127.0.0.1:8000/hello/User

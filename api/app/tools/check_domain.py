@@ -1,11 +1,11 @@
 import whois
-from datetime import datetime
+from datetime import datetime, timezone
 from dateutil import parser
 
 from http import HTTPStatus
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
-from tools import AUTHORISATION
+from app.tools import AUTHORISATION
 
 router: APIRouter = APIRouter(dependencies=[AUTHORISATION])
 
@@ -36,6 +36,7 @@ def parse_expiration_date(expiration_date) -> str:
                 dates.append(parser.parse(date))
             else:
                 dates.append(date)
+        dates = [dt.astimezone(timezone.utc) if dt.tzinfo else dt.replace(tzinfo=timezone.utc) for dt in expiration_date]
 
         result = min(dates)
     elif isinstance(expiration_date, str):

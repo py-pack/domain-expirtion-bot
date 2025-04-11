@@ -2,7 +2,7 @@ from http import HTTPStatus
 from typing import NoReturn
 from fastapi import Request, Depends, HTTPException
 
-from config import settings
+from app.config import settings
 
 
 async def authorisation(request: Request) -> NoReturn | None:
