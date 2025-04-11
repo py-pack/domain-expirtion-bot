@@ -96,3 +96,26 @@ command: [ "uvicorn", "main:app", "--reload", "--host", "${HOST:-0.0.0.0}", "--p
 5. Натиснути **Next**, далі **Create**
 
 ---
+
+
+# Create Frontend
+
+
+```yml
+services:
+    front:
+        image: node:22
+        working_dir: /app
+        volumes:
+            - ./front:/app
+        command: sh
+```
+
+```bash
+    docker compose run --rm front bash
+```
+
+```bash
+    npm create vue@latest
+```
+

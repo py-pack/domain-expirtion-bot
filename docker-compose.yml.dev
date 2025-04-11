@@ -3,7 +3,7 @@ services:
         build:
             context: ./api
             dockerfile: Dockerfile
-#            target: dev
+        #            target: dev
         container_name: ${NAME_SERVICE:-domain_ex}_api
         restart: unless-stopped
         ports:
@@ -11,11 +11,25 @@ services:
         volumes:
             - ./api:/app
         env_file:
-          - .env
+            - .env
         depends_on:
             - db
             - redis
         command: uvicorn main:app --host 0.0.0.0 --port 9000 --reload
+
+    front:
+        build:
+            context: ./front
+        container_name: ${NAME_SERVICE:-domain_ex}_front
+        ports:
+            - "5173:5173"
+        volumes:
+            - ./front:/app
+            - /app/node_modules
+        command: npm run dev
+        depends_on:
+            - api
+
 
     db:
         image: leadsdoit/postgres:17.2
