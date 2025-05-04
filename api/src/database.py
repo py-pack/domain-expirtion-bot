@@ -23,7 +23,7 @@ def __db_session_gen():
 
 
 def get_db():
-    return __db_session_gen()
+    yield from __db_session_gen()
 
 
 @contextmanager

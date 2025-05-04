@@ -10,7 +10,7 @@ from src.api_setting import AUTHORISATION
 tools_router: APIRouter = APIRouter(dependencies=[AUTHORISATION])
 
 
-@tools_router.get(path="/domain/expiration", status_code=HTTPStatus.OK)
+@tools_router.get(path="/expiration", status_code=HTTPStatus.OK)
 async def get_domain_info(domain_name: str):
     domain_info = whois.whois(domain_name)
 

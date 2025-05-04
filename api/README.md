@@ -17,3 +17,15 @@
 
         curl --location 'http://localhost:9001/api/domain/expiration?domain_name=google.com' \
              --header 'Token-X: your_32_char_static_token_here'
+
+
+
+---
+
+## Commands
+
+### Add user
+
+```bash
+docker compose exec api python -m command.add_user
+```
