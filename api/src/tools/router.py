@@ -3,14 +3,14 @@ from datetime import datetime, timezone
 from dateutil import parser
 
 from http import HTTPStatus
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from fastapi.responses import JSONResponse
-from app.tools import AUTHORISATION
+from src.api_setting import AUTHORISATION
 
-router: APIRouter = APIRouter(dependencies=[AUTHORISATION])
+tools_router: APIRouter = APIRouter(dependencies=[AUTHORISATION])
 
 
-@router.get(path="/domain/expiration", status_code=HTTPStatus.OK)
+@tools_router.get(path="/domain/expiration", status_code=HTTPStatus.OK)
 async def get_domain_info(domain_name: str):
     domain_info = whois.whois(domain_name)
 
@@ -23,12 +23,12 @@ async def get_domain_info(domain_name: str):
             "success": True,
             "data": {
                 "domain": domain_name,
-                "expiration_date": parse_expiration_date(domain_info.expiration_date)
+                "expiration_date": _parse_expiration_date(domain_info.expiration_date)
             }
         })
 
 
-def parse_expiration_date(expiration_date) -> str:
+def _parse_expiration_date(expiration_date) -> str:
     if isinstance(expiration_date, list):
         dates = []
         for date in expiration_date:

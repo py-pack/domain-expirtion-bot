@@ -48,7 +48,7 @@ services:
 
 Initialize the project
 ```bash
-docker-compose run --rm api bash
+docker compose run --rm api bash
 
 ########
 poetry init
