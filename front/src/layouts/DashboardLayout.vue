@@ -1,8 +1,12 @@
+<script setup lang="ts">
+import AppHeader from '@/components/layout/AppHeader.vue';
+</script>
+
 <template>
-  <div class="p-4">
-    <header class="mb-4">
-      <h2>Dashboard</h2>
-    </header>
-    <router-view />
+  <div class="app">
+    <AppHeader/>
+    <main class="main-content">
+      <router-view/>
+    </main>
   </div>
 </template>

@@ -1,5 +1,7 @@
 <template>
-  <div class="container py-5">
-    <router-view />
+  <div class="app">
+    <main>
+      <router-view/>
+    </main>
   </div>
 </template>
