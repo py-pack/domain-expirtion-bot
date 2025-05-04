@@ -21,7 +21,8 @@ const handleLogin = async () => {
     email: email.value,
     password: password.value,
   }).then(() => {
-    router.push('/dashboard')
+    const redirectPath = '/';// router?.query?.redirect || '/'
+    router.push(redirectPath)
   }).catch((error: unknown) => {
     errorMessage.value = error instanceof Error ? error.message : 'Login failed'
   })

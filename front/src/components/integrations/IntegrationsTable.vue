@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import type { Integration } from '../../types';
-import StatusPill from '../ui/StatusPill.vue';
-import UnitTag from '../ui/UnitTag.vue';
-import IconSettings from '../icons/IconSettings.vue';
+import type { Integration } from '@/types';
+import StatusPill from '@/components/ui/StatusPill.vue';
+import UnitTag from '@/components/ui/UnitTag.vue';
+import IconSettings from '@/components/icons/IconSettings.vue';
 
 const props = defineProps<{
   integrations: Integration[];
