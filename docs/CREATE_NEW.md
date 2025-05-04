@@ -46,7 +46,7 @@ services:
         command: bash
 ```
 
-Initialize the project
+## Initialize the project
 ```bash
 docker compose run --rm api bash
 
@@ -57,8 +57,52 @@ poetry add fastapi uvicorn[standard] psycopg2-binary redis
 
 ```
 
+### Alembic
 
-Add Dockerfile
+Установка 
+
+    poetry add alembic
+
+Иинициализация
+
+    alembic init -t async migrations
+
+Раскоментируем название миграций с часами в имени файла `/alembic.ini`
+```python    
+file_template = %%(year)d_%%(month).2d_%%(day).2d_%%(hour).2d%%(minute).2d-%%(rev)s_%%(slug)s
+```
+
+Передадим в алембик метаданные моделей `migrations/env.py` для автоегенерации миграций 
+```python
+from src.database import Base
+target_metadata = Base.metadata
+```
+
+Подменим ссылку подключения к БД `migrations/env.py`
+```python
+from settings import settings
+config.set_main_option('sqlalchemy.url', str(settings.db.url))
+```
+
+
+### Миграции
+
+**Создание миграций**
+
+    alembic revision --autogenerate -m "Create table document"
+
+**Выполенение миграций**
+
+    alembic upgrade head
+
+**Откатить миграцию**
+
+    alembic downgrade -1
+
+
+---
+
+### Add Dockerfile
 ```Dockerfile
 
 # old code ...

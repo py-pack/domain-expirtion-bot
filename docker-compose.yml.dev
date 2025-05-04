@@ -17,18 +17,32 @@ services:
             - redis
         command: uvicorn main:app --host 0.0.0.0 --port 9000 --reload
 
+
+#    npm_installer:
+#        image: node:23.11-alpine3.20
+#        container_name: ${NAME_SERVICE:-domain_ex}_npm_installer
+#        working_dir: /app
+#        entrypoint: "npm install"
+#        volumes:
+#            - ./front:/app
+
     front:
-        build:
-            context: ./front
-        container_name: ${NAME_SERVICE:-domain_ex}_front
-        ports:
-            - "5173:5173"
+        image: node:23.11-alpine3.20
+        container_name: ${NAME_SERVICE:-domain_ex}_npm_runer
+        restart: unless-stopped
+        working_dir: /app
+        entrypoint: "npm run dev"
+#        depends_on:
+#            npm_installer:
+#                condition: service_completed_successfully
         volumes:
             - ./front:/app
-            - /app/node_modules
-        command: npm run dev
-        depends_on:
-            - api
+        env_file:
+            - .env
+        ports:
+            - '${VITE_PORT:-10432}:${VITE_PORT:-10432}'
+
+
 
 
     db:
@@ -41,9 +55,9 @@ services:
         ports:
             - "11431:5432"
         environment:
-            POSTGRES_DB: ${APP__DB__POSTGRES_DB}
-            POSTGRES_USER: ${APP__DB__POSTGRES_USER}
-            POSTGRES_PASSWORD: ${APP__DB__POSTGRES_PASSWORD}
+            POSTGRES_DB: ${APP__DB__DB}
+            POSTGRES_USER: ${APP__DB__USER}
+            POSTGRES_PASSWORD: ${APP__DB__PASSWORD}
 
     redis:
         image: redis:7-alpine3.19
