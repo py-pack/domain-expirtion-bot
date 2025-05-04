@@ -22,7 +22,7 @@ app.add_middleware(
 app.middleware("http")(response_format_middleware)
 
 app.include_router(router=tools_router, prefix='/api/domain', tags=['tools'])
-app.include_router(router=auth_router, prefix='/api/auth', tags=['auth'])
+app.include_router(router=auth_router, prefix='/api/v1/auth', tags=['auth'])
 
 
 @app.get("/")

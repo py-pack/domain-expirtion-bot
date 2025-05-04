@@ -3,8 +3,11 @@
 </script>
 
 <template>
-  <router-view/>
+  <div>
+    <p>Welcome to the dashboard!</p>
+  </div>
 </template>
+
 
 <style scoped>
 

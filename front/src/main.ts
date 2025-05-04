@@ -1,6 +1,13 @@
-import './assets/main.css'
-
-import { createApp } from 'vue'
+import {createApp} from 'vue'
 import App from './App.vue'
+import {router} from './router'
+import api from './api/axios'
+import './assets/main.scss'
 
-createApp(App).mount('#app')
+const app = createApp(App)
+
+
+app.config.globalProperties.$api = api // доступ до axios як this.$api
+
+app.use(router)
+app.mount('#app')
