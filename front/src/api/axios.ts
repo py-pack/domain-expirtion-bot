@@ -34,9 +34,6 @@ api.interceptors.request.use((config) => {
     const token: string = storage.auth.getToken()
     if (token) {
         config.headers.Authorization = `Bearer ${token}`
-    } else {
-        // ⚠️ Опціонально: автоматичний редірект, якщо токена немає (тільки якщо це очікувана ситуація)
-        router.push("/login")
     }
     return config
 })

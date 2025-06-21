@@ -79,7 +79,16 @@ async def refresh_token(
     db_token = get_token(db, data.refresh_token)
     if not db_token:
         raise HTTPException(401, "Token not found")
-    delete_token(db, data.refresh_token)
+    delete_token(db, data.refresh_token, data.session_id)
 
     email = payload.get('sub')
     return login_user_by_email(db, email, data.session_id, user_agent)
+
+
+@auth_router.post("/logout")
+def logout(
+        payload: RefreshRequest,
+        db: Session = Depends(get_db),
+):
+    delete_token(db, payload.refresh_token, payload.session_id)
+    return {"detail": "Successfully logged out"}

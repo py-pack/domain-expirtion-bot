@@ -1,6 +1,7 @@
 import api from './axios'
 import storage from "@/utils/storage";
 import {isAxiosError} from "@/utils/axios";
+import {router} from "@/router"
 
 export interface LoginPayload {
     email: string
@@ -73,10 +74,10 @@ export async function loginWithGoogle(code: string): Promise<true> {
     }
 }
 
-export async function refreshToken(refreshToken: string): Promise<true> {
+export async function refreshToken(): Promise<true> {
     try {
         const response = await api.post("/auth/refresh", {
-            refresh_token: refreshToken,
+            refresh_token: storage.auth.getRefreshToken(),
             session_id: storage.session.getSessionId()
         })
         if (response.status === 200) {
@@ -91,8 +92,22 @@ export async function refreshToken(refreshToken: string): Promise<true> {
     }
 }
 
-export function logout() {
-    storage.auth.clearAuth()
-    storage.session.clearSessionId()
-    router.push("/login")
+export async function logout(): Promise<true> {
+    let success = false
+    try {
+        const response = await api.post("/auth/logout", {
+            refresh_token: storage.auth.getRefreshToken(),
+            session_id: storage.session.getSessionId()
+        })
+        if (response.status !== 200) {
+            success = true
+        }
+    } catch (err) {
+    } finally {
+        storage.auth.clearAuth()
+        storage.session.clearSessionId()
+        router.push("/login")
+    }
+
+    return success
 }

@@ -6,7 +6,7 @@ from passlib.hash import bcrypt_sha256
 from infra.jwt import JWTToken
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
-from sqlalchemy import select, delete
+from sqlalchemy import select, delete, or_
 
 from .models import User, RefreshToken
 from .repository import get_user_by_email, create_user
@@ -96,8 +96,17 @@ def get_token(db: Session, token: str):
     return result.scalar_one_or_none()
 
 
-def delete_token(db: Session, token: str):
-    db.execute(delete(RefreshToken).where(RefreshToken.token == token))
+def delete_token(db: Session, token: Optional[str] = None, session_id: Optional[UUID] = None):
+    stmt = delete(RefreshToken)
+    conditions = []
+    if token is not None:
+        conditions.append(RefreshToken.token == token)
+    if session_id is not None:
+        conditions.append(RefreshToken.session_id == str(session_id))
+    if conditions:
+        stmt = stmt.where(or_(*conditions))
+        db.execute(stmt)
+        db.commit()
 
 
 def create_token(
@@ -108,8 +117,7 @@ def create_token(
         session_id: UUID,
         user_agent: Optional[str] = None
 ):
-    db.execute(delete(RefreshToken).where(RefreshToken.session_id == session_id))
-    db.flush()
+    delete_token(db, token=token, session_id=session_id)
 
     new_token = RefreshToken(
         user_id=user_id,
@@ -119,4 +127,6 @@ def create_token(
         user_agent=user_agent,
     )
     db.add(new_token)
+    db.commit()
+
     return new_token
