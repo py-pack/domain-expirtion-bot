@@ -2,9 +2,10 @@ from typing import cast, Type
 from passlib.hash import bcrypt_sha256
 from fastapi import HTTPException, Depends
 from sqlalchemy.orm import Session
-from infra.jwt import create_access_token, create_refresh_token
+from infra.jwt import JWTToken
 from .models import User
 from .repository import get_user_by_email, create_user
+from settings import settings
 
 
 def _verify_password(password: str, hashed: str) -> bool:
@@ -17,9 +18,15 @@ def _hash_password(password: str) -> str:
 
 def _generate_tokens(user: Type[User]):
     payload = {"sub": str(user.id), "email": user.email}
+    jwt_generator = JWTToken(
+        settings.jwt.secret_key,
+        settings.jwt.algorithm,
+        settings.jwt.access_expire_minutes,
+        settings.jwt.refresh_expire_days
+    )
     return {
-        "access_token": create_access_token(payload),
-        "refresh_token": create_refresh_token(payload),
+        "access_token": jwt_generator.create_access_token(payload),
+        "refresh_token": jwt_generator.create_refresh_token(payload),
         "token_type": "bearer",
     }
 

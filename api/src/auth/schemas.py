@@ -8,3 +8,7 @@ class LoginRequest(BaseModel):
 
 class GoogleCallbackRequest(BaseModel):
     code: str
+
+
+class GoogleLoginRequest(BaseModel):
+    id_token: str

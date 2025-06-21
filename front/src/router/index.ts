@@ -25,19 +25,19 @@ const routes = [
     {
         path: '/integrations',
         component: DashboardLayout,
-        meta: { requiresAuth: true },  // Добавляем мета-данные
+        meta: { requiresAuth: true },
         children: [{path: '', component: IntegrationsView}]
     },
     {
         path: '/domains',
         component: DashboardLayout,
-        meta: { requiresAuth: true },  // Добавляем мета-данные
+        meta: { requiresAuth: true },
         children: [{path: '', component: DomainsView}]
     },
     {
         path: '/logs',
         component: DashboardLayout,
-        meta: { requiresAuth: true },  // Добавляем мета-данные
+        meta: { requiresAuth: true },
         children: [{path: '', component: LogsView}]
     }
 ]

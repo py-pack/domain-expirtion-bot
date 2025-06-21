@@ -32,11 +32,14 @@ def _parse_expiration_date(expiration_date) -> str:
     if isinstance(expiration_date, list):
         dates = []
         for date in expiration_date:
-            if isinstance(expiration_date, str):
+            if isinstance(date, str):
                 dates.append(parser.parse(date))
             else:
                 dates.append(date)
-        dates = [dt.astimezone(timezone.utc) if dt.tzinfo else dt.replace(tzinfo=timezone.utc) for dt in expiration_date]
+        dates = [
+            dt.astimezone(timezone.utc) if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+            for dt in dates
+        ]
 
         result = min(dates)
     elif isinstance(expiration_date, str):

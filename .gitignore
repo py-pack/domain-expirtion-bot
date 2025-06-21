@@ -11,10 +11,13 @@ site/
 venv/
 .venv/
 
+.db
+
 log/
 *.log
 
 env/
 *.env
+.env.front
 
 docker-compose.yml

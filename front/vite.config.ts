@@ -8,6 +8,7 @@ import vueDevTools from 'vite-plugin-vue-devtools'
 export default defineConfig(({mode}) => {
     const env = loadEnv(mode, process.cwd(), 'VITE__')
     const port = Number(env.VITE__PORT) || 5173
+    const domain = Number(env.VITE__DOMAIN) || 'domainex.dev'
 
     return {
         plugins: [
@@ -21,7 +22,8 @@ export default defineConfig(({mode}) => {
         },
         server: {
             host: '0.0.0.0',
-            port
+            port,
+            allowedHosts: [domain], // ✅ дозволяємо домен
         }
     }
 })

@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import {ref} from 'vue'
-import {useRouter} from 'vue-router'
-import {loginUser} from '@/api/auth'
+import {ref, onMounted} from 'vue'
+import {useRouter, useRoute} from 'vue-router'
+import {loginUser, loginWithGoogle, loginWithGoogleOneTap} from '@/api/auth'
 import Button from '@/components/ui/Button.vue';
 import IconBot from '@/components/icons/IconBot.vue';
+import {env} from '@/env'
 
 const email = ref('')
 const password = ref('')
@@ -14,24 +15,104 @@ const isLoading = ref(false);
 
 const handleLogin = async () => {
   isLoading.value = true;
-
   errorMessage.value = null
 
-  loginUser({
-    email: email.value,
-    password: password.value,
-  }).then(() => {
-    const redirectPath = '/';// router?.query?.redirect || '/'
-    router.push(redirectPath)
-  }).catch((error: unknown) => {
-    errorMessage.value = error instanceof Error ? error.message : 'Login failed'
-  })
+  loginUser({email: email.value, password: password.value,})
+      .then(() => {
+        // @ts-ignore
+        window.google?.accounts?.id?.cancel?.()
+        router.push('/')
+      })
+      .catch((error: unknown) => {
+        errorMessage.value = error instanceof Error ? error.message : 'Login failed'
+      })
+      .finally(() => isLoading.value = false)
 }
 
 const handleGoogleSignIn = () => {
-  // TODO: Implement Google Sign In
-  console.log('Google Sign In clicked');
-};
+  const params = new URLSearchParams({
+    client_id: env.google.clientId,
+    redirect_uri: env.google.redirectUri,
+    response_type: 'code',
+    scope: 'openid email profile',
+    prompt: 'select_account',
+    access_type: 'offline',
+  })
+
+  window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`
+}
+
+async function handleGoogleCredentialResponse(response: google.accounts.id.CredentialResponse) {
+  isLoading.value = true
+  errorMessage.value = null
+
+  const idToken = response.credential
+  loginWithGoogleOneTap(idToken)
+      .then(() => {
+        // @ts-ignore
+        window.google?.accounts?.id?.cancel?.()
+        router.push('/')
+      })
+      .catch((error: unknown) => {
+        errorMessage.value = error instanceof Error ? error.message : 'Login failed'
+        try {
+          // @ts-ignore
+          window.google.accounts.id.prompt()
+        } catch (err) {
+          console.warn("Manual prompt error", err)
+        }
+      })
+      .finally(() => isLoading.value = false)
+}
+
+function loadGoogleScript() {
+  return new Promise((resolve) => {
+    const existing = document.getElementById('google-one-tap')
+    if (!existing) {
+      const script = document.createElement('script')
+      script.src = 'https://accounts.google.com/gsi/client'
+      script.async = true
+      script.defer = true
+      script.id = 'google-one-tap'
+      script.onload = resolve
+      document.head.appendChild(script)
+    } else {
+      resolve(null)
+    }
+  }).then(() => {
+    // @ts-ignore
+    window.google.accounts.id.initialize({
+      client_id: env.google.clientId,
+      callback: handleGoogleCredentialResponse,
+      auto_select: false,
+      cancel_on_tap_outside: false,
+    })
+
+    // @ts-ignore
+    window.google.accounts.id.prompt()
+  })
+}
+
+onMounted(() => {
+  loadGoogleScript()
+
+  const route = useRoute();
+  const code = route.query.code as string | null;
+  if (code) {
+    isLoading.value = true
+    loginWithGoogle(code)
+        .then(() => {
+          // @ts-ignore
+          window.google?.accounts?.id?.cancel?.()
+          router.push('/')
+        })
+        .catch((error: unknown) => {
+          errorMessage.value = error instanceof Error ? error.message : 'Google login failed'
+        })
+        .finally(() => isLoading.value = false)
+  }
+})
+
 </script>
 
 <template>
