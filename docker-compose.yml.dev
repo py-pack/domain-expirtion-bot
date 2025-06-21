@@ -38,11 +38,9 @@ services:
         volumes:
             - ./front:/app
         env_file:
-            - .env
+            - .env.front
         ports:
-            - '${VITE_PORT:-10432}:${VITE_PORT:-10432}'
-
-
+            - '${VITE__PORT:-10432}:${VITE__PORT:-10432}'
 
 
     db:
@@ -55,7 +53,7 @@ services:
         ports:
             - "11431:5432"
         environment:
-            POSTGRES_DB: ${APP__DB__DB}
+            POSTGRES_DB: ${APP__DB__NAME}
             POSTGRES_USER: ${APP__DB__USER}
             POSTGRES_PASSWORD: ${APP__DB__PASSWORD}
 

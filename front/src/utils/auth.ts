@@ -1,14 +1,22 @@
+import {jwtDecode} from "jwt-decode"
 import storage from "@/utils/storage";
 
+interface JWTPayload {
+    exp: number
+
+    [key: string]: any
+}
+
 // Пример функции проверки авторизации
-export const checkIfUserIsAuthenticated = () => {
-    // Вариант 1: Проверка наличия токена в localStorage
+export const checkIfUserIsAuthenticated = (): boolean => {
     const token = storage.auth.getToken()
-    return !!token
+    if (!token) return false
 
-    // Вариант 2: Проверка через хранилище Vuex/Pinia
-    // return store.getters.isAuthenticated
-
-    // Вариант 3: Проверка через глобальное состояние авторизации
-    // return auth.isLoggedIn
+    try {
+        const decoded = jwtDecode<JWTPayload>(token)
+        const now = Date.now() / 1000 // секунди
+        return decoded.exp > now
+    } catch (e) {
+        return false // токен пошкоджено або невалідний
+    }
 }

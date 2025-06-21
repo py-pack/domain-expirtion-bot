@@ -1,11 +1,24 @@
-from typing import cast, Type
+from uuid import UUID
+from typing import cast, Optional
+from datetime import datetime
 from passlib.hash import bcrypt_sha256
-from fastapi import HTTPException, Depends
-from sqlalchemy.orm import Session
+
 from infra.jwt import JWTToken
-from .models import User
+from fastapi import HTTPException
+from sqlalchemy.orm import Session
+from sqlalchemy import select, delete
+
+from .models import User, RefreshToken
 from .repository import get_user_by_email, create_user
+
 from settings import settings
+
+jwt_generator = JWTToken(
+    settings.jwt.secret_key,
+    settings.jwt.algorithm,
+    settings.jwt.access_expire_minutes,
+    settings.jwt.refresh_expire_days
+)
 
 
 def _verify_password(password: str, hashed: str) -> bool:
@@ -16,14 +29,9 @@ def _hash_password(password: str) -> str:
     return bcrypt_sha256.hash(password)
 
 
-def _generate_tokens(user: Type[User]):
+def _generate_tokens(user: User):
     payload = {"sub": str(user.id), "email": user.email}
-    jwt_generator = JWTToken(
-        settings.jwt.secret_key,
-        settings.jwt.algorithm,
-        settings.jwt.access_expire_minutes,
-        settings.jwt.refresh_expire_days
-    )
+
     return {
         "access_token": jwt_generator.create_access_token(payload),
         "refresh_token": jwt_generator.create_refresh_token(payload),
@@ -31,7 +39,7 @@ def _generate_tokens(user: Type[User]):
     }
 
 
-def authenticate_user(db: Session, email: str, password: str) -> Type[User] | None:
+def _authenticate_user(db: Session, email: str, password: str) -> Optional[User]:
     user = get_user_by_email(db, email)
     if not user:
         raise HTTPException(status_code=403, detail="Invalid credentials")
@@ -42,16 +50,28 @@ def authenticate_user(db: Session, email: str, password: str) -> Type[User] | No
     return user
 
 
-def login_for_tokens(db: Session, email: str, password: str):
-    user = authenticate_user(db, email, password)
-    return _generate_tokens(user)
+def login_for_tokens(db: Session, email: str, password: str, session_id: UUID, user_agent: str):
+    user = _authenticate_user(db, email, password)
+    if not user:
+        raise HTTPException(status_code=403, detail="Invalid credentials")
+
+    result = _generate_tokens(user)
+    create_token(db, user.id, result.get('refresh_token'), jwt_generator.get_expire_refresh(), session_id, user_agent)
+    db.commit()
+
+    return result
 
 
-def login_user_by_email(db: Session, email: str):
+def login_user_by_email(db: Session, email: str, session_id: UUID, user_agent: str):
     user = get_user_by_email(db, email)
     if not user:
         raise HTTPException(status_code=403, detail="Invalid credentials")
-    return _generate_tokens(user)
+
+    result = _generate_tokens(user)
+    create_token(db, user.id, result.get('refresh_token'), jwt_generator.get_expire_refresh(), session_id, user_agent)
+    db.commit()
+
+    return result
 
 
 def add_user(db: Session, email: str, password: str) -> User:
@@ -61,3 +81,42 @@ def add_user(db: Session, email: str, password: str) -> User:
     hashed_password = _hash_password(password)
     user = User(email=email, hashed_password=hashed_password)
     return create_user(db, user)
+
+
+def decode_jwt(token: str) -> dict:
+    try:
+        return jwt_generator.decode_token(token)
+    except ValueError as e:
+        raise HTTPException(status_code=401, detail=str(e))
+
+
+def get_token(db: Session, token: str):
+    stmt = select(RefreshToken).where(RefreshToken.token == token)
+    result = db.execute(stmt)
+    return result.scalar_one_or_none()
+
+
+def delete_token(db: Session, token: str):
+    db.execute(delete(RefreshToken).where(RefreshToken.token == token))
+
+
+def create_token(
+        db: Session,
+        user_id: int,
+        token: str,
+        expires_at: datetime,
+        session_id: UUID,
+        user_agent: Optional[str] = None
+):
+    db.execute(delete(RefreshToken).where(RefreshToken.session_id == session_id))
+    db.flush()
+
+    new_token = RefreshToken(
+        user_id=user_id,
+        token=token,
+        expires_at=expires_at,
+        session_id=session_id,
+        user_agent=user_agent,
+    )
+    db.add(new_token)
+    return new_token

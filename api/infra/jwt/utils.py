@@ -9,15 +9,27 @@ class JWTToken:
         self.access_expire_minutes: int = access_expire_minutes
         self.refresh_expire_days: int = refresh_expire_days
 
+        self.expire_access_at: None | datetime = None
+        self.expire_refresh_at: None | datetime = None
+
+    def get_expire_access(self) -> datetime:
+        if not self.expire_access_at:
+            self.expire_access_at = datetime.now(UTC) + timedelta(minutes=self.access_expire_minutes)
+        return self.expire_access_at
+
+    def get_expire_refresh(self) -> datetime:
+        if not self.expire_refresh_at:
+            self.expire_refresh_at = datetime.now(UTC) + timedelta(days=self.refresh_expire_days)
+        return self.expire_refresh_at
+
     def create_access_token(self, data: dict) -> str:
-        return self._create_token(data, timedelta(minutes=self.access_expire_minutes), "access")
+        return self._create_token(data, self.get_expire_access(), "access")
 
     def create_refresh_token(self, data: dict) -> str:
-        return self._create_token(data, timedelta(days=self.refresh_expire_days), "refresh")
+        return self._create_token(data, self.get_expire_refresh(), "refresh")
 
-    def _create_token(self, data: dict, expire_delta: timedelta, token_type: str) -> str:
+    def _create_token(self, data: dict, expire: datetime, token_type: str) -> str:
         to_encode = data.copy()
-        expire = datetime.now(UTC) + expire_delta
         to_encode.update({"exp": expire, "type": token_type})
         return jwt.encode(to_encode, self.secret_key, algorithm=self.algorithm)
 
