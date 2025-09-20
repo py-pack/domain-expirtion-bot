@@ -16,6 +16,7 @@ export default defineConfig(({mode}) => {
             vueDevTools(),
         ],
         resolve: {
+            extensions: ['.ts', '.js', '.vue', '.json'], // порядок важливий для пріорітету пошуку index.*
             alias: {
                 '@': fileURLToPath(new URL('./src', import.meta.url))
             },

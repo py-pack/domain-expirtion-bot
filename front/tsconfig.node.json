@@ -1,5 +1,27 @@
 {
-  "extends": "@tsconfig/node22/tsconfig.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
+    "target": "ES2023",
+    "lib": ["ES2023"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "types": ["node", "vite/node"],
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true, // забороняє писати без розширення, але дозволяє імпортувати файли з розширенням .ts прямо в коді.
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noEmit": true, // не створювати JS-файли при компіляції (бо збірку робить Vite).
+
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": true, // помилка, якщо є змінні, які ніде не використовуються.
+    "noUnusedParameters": true, // помилка, якщо параметр функції не використовується.
+    "erasableSyntaxOnly": true,
+    "noFallthroughCasesInSwitch": true, // забороняє пропускати break у switch без явного fallthrough.
+    "noUncheckedSideEffectImports": true // забороняє імпорти, які виконують побічні ефекти без використання.
+  },
   "include": [
     "vite.config.*",
     "vitest.config.*",
@@ -7,13 +29,5 @@
     "nightwatch.conf.*",
     "playwright.config.*",
     "eslint.config.*"
-  ],
-  "compilerOptions": {
-    "noEmit": true,
-    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
-
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
-    "types": ["node"]
-  }
+  ]
 }
