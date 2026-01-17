@@ -1,7 +1,10 @@
-from uuid import UUID
+from uuid import UUID, uuid4
 from typing import cast, Optional
 from datetime import datetime
-from passlib.hash import bcrypt_sha256
+
+import bcrypt
+import hashlib
+import base64
 
 from infra.jwt import JWTToken
 from fastapi import HTTPException
@@ -21,16 +24,28 @@ jwt_generator = JWTToken(
 )
 
 
+def _bcrypt_password_input(password: str) -> bytes:
+    digest = hashlib.sha256(password.encode("utf-8")).digest()
+    # bcrypt приймає максимум 72 байти — тому pre-hash через SHA-256
+    return base64.b64encode(digest)
+
+
 def _verify_password(password: str, hashed: str) -> bool:
-    return bcrypt_sha256.verify(password, hashed)
+    return bcrypt.checkpw(
+        _bcrypt_password_input(password),
+        hashed.encode("ascii"),
+    )
 
 
 def _hash_password(password: str) -> str:
-    return bcrypt_sha256.hash(password)
+    return bcrypt.hashpw(
+        _bcrypt_password_input(password),
+        bcrypt.gensalt(rounds=12),
+    ).decode("ascii")
 
 
-def _generate_tokens(user: User):
-    payload = {"sub": str(user.id), "email": user.email}
+def _generate_tokens(user: User, session_id: UUID):
+    payload = {"sub": str(user.id), "email": user.email, "sid": str(session_id)}
 
     return {
         "access_token": jwt_generator.create_access_token(payload),
@@ -50,24 +65,26 @@ def _authenticate_user(db: Session, email: str, password: str) -> Optional[User]
     return user
 
 
-def login_for_tokens(db: Session, email: str, password: str, session_id: UUID, user_agent: str):
+def login_for_tokens(db: Session, email: str, password: str, user_agent: str):
     user = _authenticate_user(db, email, password)
     if not user:
         raise HTTPException(status_code=403, detail="Invalid credentials")
 
-    result = _generate_tokens(user)
+    session_id: UUID = uuid4()
+    result = _generate_tokens(user, session_id)
     create_token(db, user.id, result.get('refresh_token'), jwt_generator.get_expire_refresh(), session_id, user_agent)
     db.commit()
 
     return result
 
 
-def login_user_by_email(db: Session, email: str, session_id: UUID, user_agent: str):
+def login_verified_user(db: Session, email: str, user_agent: str):
     user = get_user_by_email(db, email)
     if not user:
         raise HTTPException(status_code=403, detail="Invalid credentials")
 
-    result = _generate_tokens(user)
+    session_id: UUID = uuid4()
+    result = _generate_tokens(user, session_id)
     create_token(db, user.id, result.get('refresh_token'), jwt_generator.get_expire_refresh(), session_id, user_agent)
     db.commit()
 
@@ -101,8 +118,9 @@ def delete_token(db: Session, token: Optional[str] = None, session_id: Optional[
     conditions = []
     if token is not None:
         conditions.append(RefreshToken.token == token)
-    if session_id is not None:
+    elif session_id is not None:
         conditions.append(RefreshToken.session_id == str(session_id))
+
     if conditions:
         stmt = stmt.where(or_(*conditions))
         db.execute(stmt)
@@ -110,12 +128,12 @@ def delete_token(db: Session, token: Optional[str] = None, session_id: Optional[
 
 
 def create_token(
-        db: Session,
-        user_id: int,
-        token: str,
-        expires_at: datetime,
-        session_id: UUID,
-        user_agent: Optional[str] = None
+    db: Session,
+    user_id: int,
+    token: str,
+    expires_at: datetime,
+    session_id: UUID,
+    user_agent: Optional[str] = None
 ):
     delete_token(db, token=token, session_id=session_id)
 
