@@ -2,12 +2,12 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.api_setting import response_format_middleware
+from app.infra.http.middleware import response_format_middleware
 
-from src.tools.router import tools_router
-from src.auth.router import auth_router
+from app.domains.tools.router import tools_router
+from app.domains.auth.router import auth_router
 
-from settings import settings
+from app.core.config import settings
 
 app = FastAPI(title="Domain Expiration Bot")
 

@@ -3,7 +3,7 @@ from sqlalchemy import create_engine
 
 from contextlib import contextmanager
 
-from settings import settings
+from app.core.config import settings
 
 
 class Base(DeclarativeBase):

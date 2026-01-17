@@ -2,7 +2,7 @@ import sys
 import time
 from loguru import logger as loguru_logger
 from sentry_sdk import capture_exception
-from settings import settings
+from app.core.config import settings
 
 # Remove all existing handlers to prevent duplicate logs
 loguru_logger.remove()

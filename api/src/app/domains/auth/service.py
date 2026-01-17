@@ -6,7 +6,7 @@ import bcrypt
 import hashlib
 import base64
 
-from infra.jwt import JWTToken
+from app.infra.jwt import JWTToken
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import select, delete, or_
@@ -14,7 +14,7 @@ from sqlalchemy import select, delete, or_
 from .models import User, RefreshToken
 from .repository import get_user_by_email, create_user
 
-from settings import settings
+from app.core.config import settings
 
 jwt_generator = JWTToken(
     settings.jwt.secret_key,

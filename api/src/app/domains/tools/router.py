@@ -5,7 +5,7 @@ from dateutil import parser
 from http import HTTPStatus
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
-from src.api_setting import AUTHORISATION
+from app.infra.http.dependencies import AUTHORISATION
 
 tools_router: APIRouter = APIRouter(dependencies=[AUTHORISATION])
 

@@ -1,11 +1,11 @@
-import os
 import re
 from typing import Optional, ClassVar
+from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import PostgresDsn
 
-PATH_TO_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = Path(__file__).resolve().parents[3]  # api/
 
 
 class LogSettings(BaseSettings):
@@ -19,8 +19,7 @@ class LogSettings(BaseSettings):
 
     @property
     def path_log(self) -> str:
-        local_path = "" if self.path.startswith("/") else PATH_TO_DIR
-        return f"{local_path}{self.path}"
+        return str(Path(self.path) if self.path.startswith("/") else (BASE_DIR / self.path.lstrip("./")))
 
 
 class SentrySettings(BaseSettings):
@@ -98,7 +97,10 @@ class ApiSettings(BaseSettings):
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=(".env.template", ".env"),
+        env_file=(
+            BASE_DIR / ".env.template",
+            BASE_DIR / ".env",
+        ),
         case_sensitive=False,
         env_nested_delimiter="__",
         env_prefix="APP__",

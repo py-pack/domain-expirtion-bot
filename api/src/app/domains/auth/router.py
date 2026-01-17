@@ -1,14 +1,14 @@
 from datetime import datetime, UTC
-from fastapi import Request, APIRouter, Depends, HTTPException, Body
+from fastapi import Request, APIRouter, Depends, HTTPException
 from jose import JWTError
 from sqlalchemy.orm import Session
 
-from infra.jwt.google_service import verify_google_token, get_user_email_from_google
+from app.infra.jwt.google_service import verify_google_token, get_user_email_from_google
 from .service import login_for_tokens, login_verified_user, decode_jwt, get_token, delete_token
 from .schemas import LoginRequest, GoogleLoginRequest, GoogleCallbackRequest, TokenPair, RefreshRequest
 
-from src.database import get_db
-from settings import settings
+from app.core.database import get_db
+from app.core.config import settings
 
 auth_router = APIRouter()
 

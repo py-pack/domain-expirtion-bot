@@ -24,3 +24,6 @@ dependencies = [
     "alembic>=1.18.1",
     "pyjwt[crypto]>=2.10.1",
 ]
+
+[project.scripts]
+app-cli = "app.cli.__main__:main"

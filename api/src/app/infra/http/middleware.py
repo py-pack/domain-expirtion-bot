@@ -1,11 +1,6 @@
-from fastapi import Request, Depends, HTTPException
+from fastapi import Request
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
-
-from http import HTTPStatus
-from typing import NoReturn
-
-from settings import settings
 
 
 async def response_format_middleware(request: Request, call_next):
@@ -43,14 +38,3 @@ async def response_format_middleware(request: Request, call_next):
                 "message": str(e)
             },
         )
-
-
-async def authorisation(request: Request) -> NoReturn | None:
-    if request.headers.get("Token-X") != settings.x_token:
-        raise HTTPException(
-            status_code=HTTPStatus.UNAUTHORIZED,
-            detail='Not authorised'
-        )
-
-
-AUTHORISATION: Depends = Depends(dependency=authorisation)
