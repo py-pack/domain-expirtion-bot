@@ -6,7 +6,7 @@
     "paths": {
       "@/*": ["./src/*"]
     },
-    "types": ["node", "vite/node"],
+    "types": ["node", "vite/client"],
 
     /* Linting */
     "strict": true,
