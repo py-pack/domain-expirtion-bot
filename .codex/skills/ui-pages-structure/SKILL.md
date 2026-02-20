@@ -1,122 +1,73 @@
 ---
 name: ui-pages-structure
-description: Enforces scalable page folder structure and shared page navigation template for this Vue admin project.
+description: Use when adding or moving frontend pages. Enforces AGENTS.md canonical page location, naming, and router update rules for `front/`.
 ---
 
 # Purpose
 
-Use this skill whenever you add, move, or refactor route pages under `src/ui/pages`.
+Use this skill whenever you add, move, or refactor route pages in the frontend.
 
 Goals:
-- keep pages grouped by feature
-- keep route files easy to find
-- reuse one consistent top navigation header
+- keep pages discoverable in one canonical location
+- keep router imports stable
+- avoid silent structure drift from `AGENTS.md`
 
 ---
 
 # Mandatory Page Location Rules
 
-Store pages by feature folder, not as flat files.
-
-Canonical structure:
+Pages must follow `AGENTS.md` canonical location:
 
 ```text
-src/ui/pages/
-  auth/
-    login-page.vue
-    google-auth-callback-page.vue
-  dashboard/
-    dashboard-page.vue
-  profile/
-    profile-page.vue
-  segments/
-    segments-page.vue
-  users/
-    users-page.vue
-    users-create-page.vue
-    users-edit-page.vue
+front/src/ui/pages/
 ```
 
-For new domains, create a dedicated folder:
+Default page structure (from `AGENTS.md`):
 
 ```text
-src/ui/pages/<domain>/
-  <domain>-page.vue          # index/list page
-  <domain>-create-page.vue   # optional create page
-  <domain>-edit-page.vue     # optional edit page
+front/src/ui/pages/
+  LoginPage.vue
+  UsersPage.vue
+  SegmentsPage.vue
+  FlowsPage.vue
+  ReportsPage.vue
 ```
 
-File naming rule:
-- use kebab-case filenames
-- suffix with `-page.vue`
+Rules:
+- Do not silently introduce a new nested page-folder convention.
+- For new pages, prefer the same canonical flat layout unless user explicitly requests a new structure.
+- If folder organization is required and not specified, stop and ask before changing page layout policy.
+
+Page naming rule:
+- follow the canonical `*Page.vue` convention already documented in `AGENTS.md`
 
 ---
 
 # Routing Rules
 
-- Router imports must point to feature folders, e.g.:
-  - `@/ui/pages/users/users-page.vue`
-- Keep route paths stable and descriptive:
-  - list: `/users`
-  - create: `/users/create`
-  - edit: `/users/:id/edit`
+- Update router imports whenever a page is added or moved.
+- Canonical router location is `front/src/app/router/index.ts` per `AGENTS.md`.
+- If the codebase still uses a legacy router path (for example `front/src/router/index.ts`), update the active router and do not create duplicate router modules.
+- Keep route paths stable and descriptive.
 
-When moving pages, update all related imports in `src/app/router/index.ts`.
-
----
-
-# Mandatory Top Navigation Template
-
-Every non-trivial page must use the shared page header component:
-
-- `src/ui/components/common/UiPageNav.vue`
-
-Required behavior:
-- breadcrumbs are always provided
-- page title is provided
-- right-side action buttons use `#actions` slot
-
-Example:
-
-```vue
-<UiPageNav
-  title="Users"
-  description="Manage platform users."
-  :breadcrumbs="[{ label: 'Users' }]"
->
-  <template #actions>
-    <RouterLink to="/users/create" class="btn btn--primary">Create user</RouterLink>
-  </template>
-</UiPageNav>
-```
-
-For nested pages:
-
-```ts
-const breadcrumbs = [
-  { label: 'Users', to: '/users' },
-  { label: 'Create user' },
-]
-```
+When moving pages, update all related imports and route records.
 
 ---
 
 # Page Composition Rules
 
-- page file contains only page-level orchestration and layout
-- domain logic remains in `src/domain/*`
-- server data must come from vue-query hooks
-- avoid duplicating header layouts; reuse `UiPageNav`
+- Page files contain page-level orchestration and layout only.
+- UI components must not contain business logic.
+- Page components must not call axios directly.
+- Server-state flows through repositories/services/query hooks as defined in `AGENTS.md`.
 
 ---
 
 # Refactor Checklist
 
 When adding or moving pages:
-1. Place file in `src/ui/pages/<feature>/`.
-2. Use kebab-case `*-page.vue` name.
+1. Place file in `front/src/ui/pages/` (canonical layout).
+2. Use the canonical `*Page.vue` naming style.
 3. Update router imports and route records.
-4. Add `UiPageNav` with breadcrumbs.
-5. Put action buttons in `UiPageNav` `#actions` slot.
-6. Run `npm run build`.
-
+4. Verify no direct axios usage was introduced in page code.
+5. Run frontend build/tests relevant to the change.
