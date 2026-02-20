@@ -10,9 +10,9 @@ from app.infra.jwt import JWTToken
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import select, delete, or_
+from app.domains.users.repository import get_user_by_email, create_user
 
 from .models import User, RefreshToken
-from .repository import get_user_by_email, create_user
 
 from app.core.config import settings
 
