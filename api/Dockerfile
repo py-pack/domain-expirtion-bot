@@ -1,21 +1,24 @@
 FROM python:3.13-slim
 
 ENV TZ=Europe/Kiev
+ENV PYTHONPATH=/app/src
+ENV UV_PROJECT_ENVIRONMENT=/opt/venv
+ENV PATH="/opt/venv/bin:${PATH}"
 
 RUN pip install --upgrade pip
-
-RUN pip install poetry==2.1
+RUN pip install --no-cache-dir uv
 
 WORKDIR /app
 
-COPY pyproject.toml poetry.lock* ./
+COPY pyproject.toml uv.lock ./
 
-RUN poetry config virtualenvs.create false \
- && poetry install --no-root --no-interaction --no-ansi
+RUN uv sync --frozen --no-install-project --no-dev
 
 COPY . .
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "9000"]
+RUN uv sync --frozen --no-dev
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "9000"]
 
 #FROM dev AS prod
 #

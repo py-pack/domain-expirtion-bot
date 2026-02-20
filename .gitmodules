@@ -1,3 +1,0 @@
-[submodule ".codex/skills/custom"]
-	path = .codex/skills/custom
-	url = git@gitlab.ldiservice.com:libs/codex-skills.git
