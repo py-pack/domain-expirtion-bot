@@ -6,6 +6,8 @@ import DashboardPage from '@/ui/pages/DashboardPage.vue'
 import IntegrationsPage from '@/ui/pages/IntegrationsPage.vue'
 import DomainsPage from '@/ui/pages/DomainsPage.vue'
 import LogsPage from '@/ui/pages/LogsPage.vue'
+import SettingsPage from '@/ui/pages/SettingsPage.vue'
+import UsersPage from '@/ui/pages/UsersPage.vue'
 
 const routes: RouteRecordRaw[] = [
   {
@@ -39,6 +41,16 @@ const routes: RouteRecordRaw[] = [
         path: 'logs',
         name: 'logs',
         component: LogsPage,
+      },
+      {
+        path: 'users',
+        name: 'users',
+        component: UsersPage,
+      },
+      {
+        path: 'settings',
+        name: 'settings',
+        component: SettingsPage,
       },
     ],
   },

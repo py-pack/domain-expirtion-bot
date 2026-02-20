@@ -3,12 +3,10 @@ import {
   type GoogleCodePayload,
   type GoogleOneTapPayload,
   type LoginPayload,
-  type RefreshPayload,
   type TokenPair,
   googleCodePayloadSchema,
   googleOneTapPayloadSchema,
   loginPayloadSchema,
-  refreshPayloadSchema,
   tokenPairSchema,
 } from '@/domain/auth/model'
 
@@ -16,8 +14,8 @@ export interface AuthRepository {
   login(payload: LoginPayload): Promise<TokenPair>
   loginWithGoogleCode(payload: GoogleCodePayload): Promise<TokenPair>
   loginWithGoogleOneTap(payload: GoogleOneTapPayload): Promise<TokenPair>
-  refresh(payload: RefreshPayload): Promise<TokenPair>
-  logout(payload: RefreshPayload): Promise<void>
+  refresh(): Promise<TokenPair>
+  logout(): Promise<void>
 }
 
 async function parseTokenPair(data: unknown): Promise<TokenPair> {
@@ -56,18 +54,16 @@ export const authRepository: AuthRepository = {
     return parseTokenPair(data)
   },
 
-  async refresh(payload: RefreshPayload): Promise<TokenPair> {
-    const requestPayload = refreshPayloadSchema.parse(payload)
-    const {data} = await httpClient.post('/auth/refresh', requestPayload, {
+  async refresh(): Promise<TokenPair> {
+    const {data} = await httpClient.post('/auth/refresh', {}, {
       skipAuthRefresh: true,
     })
 
     return parseTokenPair(data)
   },
 
-  async logout(payload: RefreshPayload): Promise<void> {
-    const requestPayload = refreshPayloadSchema.parse(payload)
-    await httpClient.post('/auth/logout', requestPayload, {
+  async logout(): Promise<void> {
+    await httpClient.post('/auth/logout', {}, {
       skipAuthRefresh: true,
     })
   },

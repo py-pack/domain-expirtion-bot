@@ -1,15 +1,12 @@
 export type AuthTokens = {
   accessToken: string
-  refreshToken: string
 }
 
 let accessToken: string | null = null
-let refreshToken: string | null = null
 
 export const tokenStore = {
   setTokens(tokens: AuthTokens): void {
     accessToken = tokens.accessToken
-    refreshToken = tokens.refreshToken
   },
 
   setAccessToken(token: string | null): void {
@@ -17,7 +14,7 @@ export const tokenStore = {
   },
 
   setRefreshToken(token: string | null): void {
-    refreshToken = token
+    void token
   },
 
   getAccessToken(): string | null {
@@ -25,11 +22,10 @@ export const tokenStore = {
   },
 
   getRefreshToken(): string | null {
-    return refreshToken
+    return null
   },
 
   clear(): void {
     accessToken = null
-    refreshToken = null
   },
 }

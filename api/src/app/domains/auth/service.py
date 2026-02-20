@@ -44,6 +44,14 @@ def _hash_password(password: str) -> str:
     ).decode("ascii")
 
 
+def verify_password(password: str, hashed: str) -> bool:
+    return _verify_password(password, hashed)
+
+
+def hash_password(password: str) -> str:
+    return _hash_password(password)
+
+
 def _generate_tokens(user: User, session_id: UUID):
     payload = {"sub": str(user.id), "email": user.email, "sid": str(session_id)}
 
@@ -95,7 +103,7 @@ def add_user(db: Session, email: str, password: str) -> User:
     if get_user_by_email(db, email):
         raise HTTPException(status_code=400, detail="User already exists")
 
-    hashed_password = _hash_password(password)
+    hashed_password = hash_password(password)
     user = User(email=email, hashed_password=hashed_password)
     return create_user(db, user)
 

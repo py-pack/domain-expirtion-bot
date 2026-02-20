@@ -6,6 +6,7 @@ from app.infra.http.middleware import response_format_middleware
 
 from app.domains.tools.router import tools_router
 from app.domains.auth.router import auth_router
+from app.domains.users.router import users_router
 
 from app.core.config import settings
 
@@ -23,6 +24,7 @@ app.middleware("http")(response_format_middleware)
 
 app.include_router(router=tools_router, prefix='/api/domain', tags=['tools'])
 app.include_router(router=auth_router, prefix='/api/v1/auth', tags=['auth'])
+app.include_router(router=users_router, prefix='/api/v1/users', tags=['users'])
 
 
 @app.get("/")

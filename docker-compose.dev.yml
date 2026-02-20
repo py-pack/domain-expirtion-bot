@@ -6,8 +6,6 @@ services:
         #            target: dev
         container_name: ${NAME_SERVICE:-domain_ex}_api
         restart: unless-stopped
-        ports:
-            - "10431:9000"
         volumes:
             - ./api:/app
         env_file:
@@ -39,8 +37,18 @@ services:
             - ./front:/app
         env_file:
             - .env.front
+
+    nginx:
+        image: nginx:1.27-alpine
+        container_name: ${NAME_SERVICE:-domain_ex}_nginx
+        restart: unless-stopped
+        depends_on:
+            - api
+            - front
         ports:
-            - '${VITE__PORT:-10432}:${VITE__PORT:-10432}'
+            - "127.0.0.1:10430:80"
+        volumes:
+            - ./docker/nginx/domainex.compose.dev.conf:/etc/nginx/conf.d/default.conf:ro
 
 
     db:

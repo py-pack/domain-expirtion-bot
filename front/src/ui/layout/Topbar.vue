@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import {ref} from 'vue'
-import {Bell, LogOut, Moon, Sun, UserRound} from 'lucide-vue-next'
+import {onBeforeUnmount, onMounted, ref} from 'vue'
+import {useRouter} from 'vue-router'
+import {Bell, LogOut, Moon, Settings, Sun, UserRound} from 'lucide-vue-next'
 import {useThemeStore} from '@/shared/ui/theme.store'
 import UiButton from '@/ui/components/common/UiButton.vue'
 import IconBot from '@/ui/components/common/icons/IconBot.vue'
@@ -11,11 +12,29 @@ const emit = defineEmits<{
 
 const hasNotifications = ref(false)
 const showDropdown = ref(false)
+const profileRef = ref<HTMLElement | null>(null)
 
+const router = useRouter()
 const themeStore = useThemeStore()
 
 function toggleDropdown(): void {
   showDropdown.value = !showDropdown.value
+}
+
+function handleDocumentClick(event: MouseEvent): void {
+  if (!showDropdown.value) {
+    return
+  }
+
+  const target = event.target
+
+  if (!(target instanceof Node)) {
+    return
+  }
+
+  if (!profileRef.value?.contains(target)) {
+    showDropdown.value = false
+  }
 }
 
 function logout(): void {
@@ -23,9 +42,22 @@ function logout(): void {
   emit('logout')
 }
 
+async function openSettings(): Promise<void> {
+  showDropdown.value = false
+  await router.push('/settings')
+}
+
 function toggleTheme(): void {
   themeStore.toggleTheme()
 }
+
+onMounted(() => {
+  document.addEventListener('click', handleDocumentClick)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', handleDocumentClick)
+})
 </script>
 
 <template>
@@ -33,7 +65,7 @@ function toggleTheme(): void {
     <div class="topbar__inner">
       <RouterLink to="/" class="topbar__brand">
         <IconBot class="topbar__brand-icon" />
-        <span>Domain Expiration Bot</span>
+        <span>DomainExp</span>
       </RouterLink>
 
       <nav class="topbar__nav">
@@ -46,6 +78,9 @@ function toggleTheme(): void {
           active-class="topbar__link--active"
         >
           Integrations
+        </RouterLink>
+        <RouterLink to="/users" class="topbar__link" active-class="topbar__link--active">
+          Users
         </RouterLink>
         <RouterLink to="/logs" class="topbar__link" active-class="topbar__link--active">
           Logs
@@ -63,13 +98,22 @@ function toggleTheme(): void {
           <span v-if="hasNotifications" class="topbar__dot" />
         </button>
 
-        <div class="topbar__profile">
+        <div ref="profileRef" class="topbar__profile">
           <button type="button" class="topbar__icon-btn" @click="toggleDropdown">
             <UserRound :size="18" />
           </button>
 
           <div v-if="showDropdown" class="topbar__dropdown">
-            <UiButton size="sm" variant="ghost" @click="logout">
+            <UiButton
+              size="sm"
+              variant="ghost"
+              class="topbar__dropdown-action"
+              @click="openSettings"
+            >
+              <Settings :size="14" />
+              Settings
+            </UiButton>
+            <UiButton size="sm" variant="ghost" class="topbar__dropdown-action" @click="logout">
               <LogOut :size="14" />
               Logout
             </UiButton>
@@ -147,13 +191,22 @@ function toggleTheme(): void {
     width: 36px;
     height: 36px;
     border-radius: var(--radius-sm);
-    border: 1px solid var(--color-border);
+    border: none;
+    background: transparent;
+    color: var(--color-text);
+    cursor: pointer;
     display: inline-flex;
     align-items: center;
     justify-content: center;
 
     &:hover {
       background: var(--color-surface-soft);
+    }
+
+    &:focus,
+    &:focus-visible {
+      outline: none;
+      box-shadow: none;
     }
 
     &--notification {
@@ -185,6 +238,12 @@ function toggleTheme(): void {
     padding: var(--space-1);
     background: var(--color-surface);
     box-shadow: var(--card-shadow);
+  }
+
+  &__dropdown-action {
+    width: 100%;
+    justify-content: flex-start;
+    border: none;
   }
 }
 

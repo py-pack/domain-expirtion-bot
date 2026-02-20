@@ -7,11 +7,13 @@ withDefaults(
     type?: 'text' | 'email' | 'password'
     autocomplete?: string
     required?: boolean
+    readonly?: boolean
   }>(),
   {
     type: 'text',
     autocomplete: 'off',
     required: false,
+    readonly: false,
   },
 )
 
@@ -34,6 +36,7 @@ function onInput(event: Event): void {
       :type="type"
       :autocomplete="autocomplete"
       :required="required"
+      :readonly="readonly"
       :value="modelValue"
       @input="onInput"
     />

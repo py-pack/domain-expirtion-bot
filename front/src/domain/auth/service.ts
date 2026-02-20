@@ -31,7 +31,6 @@ function isTokenExpired(token: string): boolean {
 function saveTokenPair(tokens: TokenPair): void {
   tokenStore.setTokens({
     accessToken: tokens.access_token,
-    refreshToken: tokens.refresh_token,
   })
 }
 
@@ -52,15 +51,7 @@ export const authService = {
   },
 
   async refreshSession(): Promise<string> {
-    const refreshToken = tokenStore.getRefreshToken()
-
-    if (!refreshToken) {
-      throw new Error('Refresh token is missing')
-    }
-
-    const tokens = await authRepository.refresh({
-      refresh_token: refreshToken,
-    })
+    const tokens = await authRepository.refresh()
 
     saveTokenPair(tokens)
 
@@ -68,12 +59,8 @@ export const authService = {
   },
 
   async logout(): Promise<void> {
-    const refreshToken = tokenStore.getRefreshToken()
-
     try {
-      if (refreshToken) {
-        await authRepository.logout({refresh_token: refreshToken})
-      }
+      await authRepository.logout()
     } finally {
       this.clearSession()
       authEvents.emit('signed-out')
