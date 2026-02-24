@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {computed, onMounted, ref} from 'vue'
+import {computed, onBeforeUnmount, onMounted, ref} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
 import {env} from '@/env'
 import {
@@ -26,6 +26,17 @@ type GoogleAccountsApi = {
         auto_select: boolean
         cancel_on_tap_outside: boolean
       }) => void
+      renderButton: (
+        container: HTMLElement,
+        options: {
+          theme: 'filled_black' | 'filled_blue' | 'outline'
+          size: 'large' | 'medium' | 'small'
+          text: 'continue_with' | 'signin_with' | 'signup_with'
+          shape: 'pill' | 'rect' | 'circle' | 'square'
+          logo_alignment: 'left' | 'center'
+          width?: number
+        },
+      ) => void
       prompt: () => void
       cancel: () => void
     }
@@ -42,6 +53,7 @@ const router = useRouter()
 const email = ref('')
 const password = ref('')
 const errorMessage = ref<string | null>(null)
+const isGoogleOneTapScriptFailed = ref(false)
 
 const loginMutation = useLoginMutation()
 const googleCodeMutation = useGoogleCodeLoginMutation()
@@ -56,6 +68,7 @@ const isLoading = computed(
     googleCodeMutation.isPending.value ||
     googleOneTapMutation.isPending.value,
 )
+const isGoogleFallbackVisible = computed(() => isGoogleOneTapScriptFailed.value)
 
 function getRedirectPath(): string {
   const redirect = route.query.redirect
@@ -96,9 +109,19 @@ function startGoogleOauthFlow(): void {
     response_type: 'code',
     scope: 'openid email profile',
     prompt: 'select_account',
+    include_granted_scopes: 'true',
   })
 
-  window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`
+  const googleAuthorizeUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`
+  const popup = window.open(
+    googleAuthorizeUrl,
+    'google-auth',
+    'width=520,height=720,menubar=no,toolbar=no,status=no,scrollbars=yes',
+  )
+
+  if (!popup) {
+    window.location.assign(googleAuthorizeUrl)
+  }
 }
 
 async function handleGoogleOneTapCallback(
@@ -125,17 +148,39 @@ function initializeGoogleOneTap(): void {
   const googleApi = getGoogleApi()
 
   if (!googleApi) {
+    isGoogleOneTapScriptFailed.value = true
     return
   }
 
-  googleApi.accounts.id.initialize({
-    client_id: env.google.clientId,
-    callback: handleGoogleOneTapCallback,
-    auto_select: false,
-    cancel_on_tap_outside: false,
-  })
+  const container = document.getElementById('google-one-tap-container')
 
-  googleApi.accounts.id.prompt()
+  if (!container) {
+    isGoogleOneTapScriptFailed.value = true
+    return
+  }
+
+  try {
+    googleApi.accounts.id.initialize({
+      client_id: env.google.clientId,
+      callback: handleGoogleOneTapCallback,
+      auto_select: false,
+      cancel_on_tap_outside: false,
+    })
+
+    googleApi.accounts.id.renderButton(container, {
+      theme: 'filled_black',
+      size: 'large',
+      text: 'continue_with',
+      shape: 'pill',
+      logo_alignment: 'left',
+      width: 320,
+    })
+
+    googleApi.accounts.id.prompt()
+    isGoogleOneTapScriptFailed.value = false
+  } catch {
+    isGoogleOneTapScriptFailed.value = true
+  }
 }
 
 async function loadGoogleScript(): Promise<void> {
@@ -160,17 +205,79 @@ async function loadGoogleScript(): Promise<void> {
   })
 }
 
-onMounted(async () => {
-  const code = route.query.code
+function handleGoogleAuthMessage(event: MessageEvent): void {
+  if (event.origin !== window.location.origin) {
+    return
+  }
 
-  if (typeof code === 'string' && code.length > 0) {
-    try {
-      await googleCodeMutation.mutateAsync({code})
-      await completeLoginFlow()
-      return
-    } catch (error: unknown) {
+  if (event.data?.type !== 'google-auth-callback') {
+    return
+  }
+
+  const payload = event.data?.payload ?? {}
+  const code = payload.code
+
+  if (typeof code !== 'string' || code.length === 0) {
+    errorMessage.value = payload.error_description || 'Google login failed.'
+    return
+  }
+
+  errorMessage.value = null
+  googleCodeMutation
+    .mutateAsync({code})
+    .then(completeLoginFlow)
+    .catch((error: unknown) => {
       errorMessage.value = getApiErrorMessage(error)
-    }
+    })
+}
+
+function handleGoogleRedirectCallback(): boolean {
+  const queryParams = route.query ?? {}
+
+  if (!Object.keys(queryParams).length) {
+    return false
+  }
+
+  if (window.opener && window.opener !== window) {
+    window.opener.postMessage(
+      {
+        type: 'google-auth-callback',
+        payload: queryParams,
+      },
+      window.location.origin,
+    )
+    window.close()
+    return true
+  }
+
+  void router.replace({query: {}})
+  const code = queryParams.code
+
+  if (typeof code !== 'string' || code.length === 0) {
+    errorMessage.value =
+      typeof queryParams.error_description === 'string'
+        ? queryParams.error_description
+        : 'Google login failed.'
+    return true
+  }
+
+  googleCodeMutation
+    .mutateAsync({code})
+    .then(completeLoginFlow)
+    .catch((error: unknown) => {
+      errorMessage.value = getApiErrorMessage(error)
+    })
+
+  return true
+}
+
+onMounted(async () => {
+  window.addEventListener('message', handleGoogleAuthMessage)
+
+  const redirectHandled = handleGoogleRedirectCallback()
+
+  if (redirectHandled) {
+    return
   }
 
   if (!canUseGoogleLogin) {
@@ -181,8 +288,12 @@ onMounted(async () => {
     await loadGoogleScript()
     initializeGoogleOneTap()
   } catch {
-    // Ignore script failure and keep OAuth button fallback.
+    isGoogleOneTapScriptFailed.value = true
   }
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('message', handleGoogleAuthMessage)
 })
 </script>
 
@@ -234,16 +345,20 @@ onMounted(async () => {
         <template v-if="canUseGoogleLogin">
           <div class="auth-divider"><span>OR</span></div>
 
-          <UiButton
-            class="auth-form__google"
-            variant="secondary"
-            size="lg"
-            :disabled="isLoading"
-            @click="startGoogleOauthFlow"
-          >
-            <IconGoogle class="auth-form__google-icon" />
-            Continue with Google
-          </UiButton>
+          <div class="auth-google">
+            <UiButton
+              v-if="isGoogleFallbackVisible"
+              class="auth-form__google auth-form__google--dark"
+              variant="secondary"
+              size="lg"
+              :disabled="isLoading"
+              @click="startGoogleOauthFlow"
+            >
+              <IconGoogle class="auth-form__google-icon" />
+              Continue with Google
+            </UiButton>
+            <div v-else id="google-one-tap-container" class="auth-google__one-tap"></div>
+          </div>
         </template>
 
         <p v-if="!canUsePasswordLogin && !canUseGoogleLogin" class="auth-form-container__error">
@@ -371,8 +486,53 @@ onMounted(async () => {
     }
   }
 
+  &__google--dark {
+    background:
+      radial-gradient(circle at 14% 20%, rgba(79, 139, 255, 0.12), transparent 52%),
+      linear-gradient(180deg, #1b2740 0%, #152238 100%);
+    border: 1px solid rgba(120, 156, 221, 0.28);
+    color: #f8fafc;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.07),
+      inset 0 -1px 0 rgba(79, 139, 255, 0.08),
+      0 10px 20px rgba(7, 12, 24, 0.28);
+
+    &:hover:not(:disabled) {
+      background:
+        radial-gradient(circle at 14% 20%, rgba(79, 139, 255, 0.18), transparent 56%),
+        linear-gradient(180deg, #1f2d49 0%, #17263f 100%);
+      border-color: rgba(120, 156, 221, 0.34);
+    }
+  }
+
   &__google-icon {
     flex-shrink: 0;
+  }
+}
+
+.auth-google {
+  display: flex;
+  justify-content: center;
+}
+
+.auth-google__one-tap {
+  width: 100%;
+  min-height: 48px;
+  display: flex;
+  justify-content: center;
+  padding: 8px;
+  border-radius: 16px;
+  border: 1px solid rgba(120, 156, 221, 0.22);
+  background:
+    radial-gradient(circle at 12% 20%, rgba(79, 139, 255, 0.1), transparent 58%),
+    linear-gradient(180deg, rgba(24, 37, 60, 0.78), rgba(17, 29, 48, 0.92));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 8px 18px rgba(7, 12, 24, 0.18);
+
+  :deep(div),
+  :deep(iframe) {
+    border-radius: 999px;
   }
 }
 
