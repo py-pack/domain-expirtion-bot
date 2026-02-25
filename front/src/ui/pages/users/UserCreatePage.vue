@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {computed, ref} from 'vue'
+import {CornerUpLeft, Plus} from 'lucide-vue-next'
 import type {UnitResponsibleLevel} from '@/domain/units/model'
 import {useUnitsQuery} from '@/domain/units/queries'
 import {
@@ -7,6 +8,7 @@ import {
   useReplaceUserUnitAssignmentsMutation,
 } from '@/domain/users/queries'
 import {getApiErrorMessage} from '@/shared/http/errors'
+import {showErrorToast, showSuccessToast} from '@/shared/ui/toast'
 import UiButton from '@/ui/components/common/UiButton.vue'
 import UiFormField from '@/ui/components/common/UiFormField.vue'
 import UserUnitAssignmentsRepeater from '@/ui/components/users/UserUnitAssignmentsRepeater.vue'
@@ -28,7 +30,6 @@ const email = ref('')
 const fullName = ref('')
 const password = ref('')
 const isActive = ref(true)
-const errorMessage = ref<string | null>(null)
 const unitAssignmentsError = ref<string | null>(null)
 const unitAssignmentRows = ref<UserUnitAssignmentDraftRow[]>([])
 
@@ -75,7 +76,6 @@ function normalizeUnitAssignments(): Array<{unit_id: number; level: UnitResponsi
 }
 
 async function submitCreate(): Promise<void> {
-  errorMessage.value = null
   unitAssignmentsError.value = null
 
   const normalizedAssignments = normalizeUnitAssignments()
@@ -101,9 +101,10 @@ async function submitCreate(): Promise<void> {
       })
     }
 
+    showSuccessToast('User created successfully.')
     void router.push({name: 'users'})
   } catch (error: unknown) {
-    errorMessage.value = getApiErrorMessage(error)
+    showErrorToast(getApiErrorMessage(error))
   }
 }
 
@@ -123,10 +124,13 @@ function goBack(): void {
     ]"
   >
     <template #actions>
-      <UiButton variant="ghost" @click="goBack">Back to list</UiButton>
+      <UiButton variant="ghost" @click="goBack">
+        <template #icon>
+          <CornerUpLeft :size="16" />
+        </template>
+        Back to list
+      </UiButton>
     </template>
-
-    <p v-if="errorMessage" class="user-form-page__error">{{ errorMessage }}</p>
 
     <div class="user-form-page__grid">
       <form class="user-form-page__form-card" @submit.prevent="submitCreate">
@@ -168,11 +172,15 @@ function goBack(): void {
           <UiButton type="button" variant="ghost" @click="goBack">Cancel</UiButton>
           <UiButton
             type="submit"
+            tone="success"
             :disabled="
               createUserMutation.isPending.value ||
               replaceUserUnitAssignmentsMutation.isPending.value
             "
           >
+            <template #icon>
+              <Plus :size="16" />
+            </template>
             {{
               createUserMutation.isPending.value ||
               replaceUserUnitAssignmentsMutation.isPending.value
@@ -202,8 +210,12 @@ function goBack(): void {
           type="button"
           size="sm"
           variant="ghost"
+          tone="success"
           @click="unitAssignmentRows = [createDraftRow()]"
         >
+          <template #icon>
+            <Plus :size="16" />
+          </template>
           Add first binding
         </UiButton>
       </aside>

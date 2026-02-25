@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import {computed, ref} from 'vue'
+import {computed} from 'vue'
+import {Pencil, Trash2} from 'lucide-vue-next'
 import {useRouter} from 'vue-router'
 import {
   useDeleteUnitMutation,
   useUnitsQuery,
 } from '@/domain/units/queries'
 import {getApiErrorMessage} from '@/shared/http/errors'
+import {showErrorToast, showSuccessToast} from '@/shared/ui/toast'
 import UiButton from '@/ui/components/common/UiButton.vue'
 import UiTable from '@/ui/components/common/UiTable.vue'
 
@@ -14,9 +16,6 @@ const router = useRouter()
 const unitsQuery = useUnitsQuery()
 const deleteUnitMutation = useDeleteUnitMutation()
 
-const actionError = ref<string | null>(null)
-const actionSuccess = ref<string | null>(null)
-
 const units = computed(() => unitsQuery.data.value ?? [])
 
 function openEditPage(unitId: number): void {
@@ -24,18 +23,15 @@ function openEditPage(unitId: number): void {
 }
 
 async function removeUnit(unitId: number): Promise<void> {
-  actionError.value = null
-  actionSuccess.value = null
-
   if (!window.confirm(`Delete unit #${unitId}?`)) {
     return
   }
 
   try {
     await deleteUnitMutation.mutateAsync(unitId)
-    actionSuccess.value = 'Unit deleted successfully.'
+    showSuccessToast('Unit deleted successfully.')
   } catch (error: unknown) {
-    actionError.value = getApiErrorMessage(error)
+    showErrorToast(getApiErrorMessage(error))
   }
 }
 </script>
@@ -46,8 +42,6 @@ async function removeUnit(unitId: number): Promise<void> {
       Manage units and open a dedicated page to edit unit name and responsibles.
     </p>
 
-    <p v-if="actionError" class="settings-units-page__error">{{ actionError }}</p>
-    <p v-if="actionSuccess" class="settings-units-page__success">{{ actionSuccess }}</p>
     <p v-if="unitsQuery.error.value" class="settings-units-page__error">
       {{ getApiErrorMessage(unitsQuery.error.value) }}
     </p>
@@ -71,14 +65,21 @@ async function removeUnit(unitId: number): Promise<void> {
           <td>{{ unit.responsibles_count }}</td>
           <td class="settings-units-page__actions">
             <UiButton size="sm" variant="ghost" @click="openEditPage(unit.id)">
+              <template #icon>
+                <Pencil :size="16" />
+              </template>
               Edit
             </UiButton>
             <UiButton
               size="sm"
               variant="ghost"
+              tone="danger"
               :disabled="deleteUnitMutation.isPending.value"
               @click="removeUnit(unit.id)"
             >
+              <template #icon>
+                <Trash2 :size="16" />
+              </template>
               Delete
             </UiButton>
           </td>
@@ -102,12 +103,6 @@ async function removeUnit(unitId: number): Promise<void> {
   &__error {
     margin: 0;
     color: var(--color-danger);
-    font-size: 0.875rem;
-  }
-
-  &__success {
-    margin: 0;
-    color: var(--color-success);
     font-size: 0.875rem;
   }
 

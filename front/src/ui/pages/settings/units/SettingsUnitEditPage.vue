@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {computed, ref, watch} from 'vue'
+import {Plus, Save} from 'lucide-vue-next'
 import {useRoute} from 'vue-router'
 import type {UnitResponsibleLevel} from '@/domain/units/model'
 import {
@@ -10,6 +11,7 @@ import {
 } from '@/domain/units/queries'
 import {useSystemUsersQuery} from '@/domain/users/queries'
 import {getApiErrorMessage} from '@/shared/http/errors'
+import {showErrorToast, showSuccessToast} from '@/shared/ui/toast'
 import UiButton from '@/ui/components/common/UiButton.vue'
 import UiFormField from '@/ui/components/common/UiFormField.vue'
 import UnitResponsiblesRepeater, {
@@ -40,9 +42,7 @@ const unitResponsiblesQuery = useUnitResponsiblesQuery(unitId)
 const unitName = ref('')
 const responsibleRows = ref<UnitResponsibleDraftRow[]>([])
 
-const unitError = ref<string | null>(null)
 const responsiblesError = ref<string | null>(null)
-const successMessage = ref<string | null>(null)
 
 let nextResponsibleRowId = 1
 
@@ -95,11 +95,8 @@ watch(
 )
 
 async function saveUnit(): Promise<void> {
-  unitError.value = null
-  successMessage.value = null
-
   if (unitId.value === null) {
-    unitError.value = 'Invalid unit ID.'
+    showErrorToast('Invalid unit ID.')
     return
   }
 
@@ -108,9 +105,9 @@ async function saveUnit(): Promise<void> {
       id: unitId.value,
       payload: {name: unitName.value.trim()},
     })
-    successMessage.value = 'Unit updated successfully.'
+    showSuccessToast('Unit updated successfully.')
   } catch (error: unknown) {
-    unitError.value = getApiErrorMessage(error)
+    showErrorToast(getApiErrorMessage(error))
   }
 }
 
@@ -144,10 +141,9 @@ function normalizeResponsibles():
 
 async function saveResponsibles(): Promise<void> {
   responsiblesError.value = null
-  successMessage.value = null
 
   if (unitId.value === null) {
-    responsiblesError.value = 'Invalid unit ID.'
+    showErrorToast('Invalid unit ID.')
     return
   }
 
@@ -164,9 +160,9 @@ async function saveResponsibles(): Promise<void> {
       },
     })
 
-    successMessage.value = 'Unit responsibles updated successfully.'
+    showSuccessToast('Unit responsibles updated successfully.')
   } catch (error: unknown) {
-    responsiblesError.value = getApiErrorMessage(error)
+    showErrorToast(getApiErrorMessage(error))
   }
 }
 </script>
@@ -176,8 +172,6 @@ async function saveResponsibles(): Promise<void> {
     <p class="settings-unit-edit-page__text-muted">
       Update unit name and manage responsible users.
     </p>
-
-    <p v-if="successMessage" class="settings-unit-edit-page__success">{{ successMessage }}</p>
 
     <p v-if="unitId === null" class="settings-unit-edit-page__error">Invalid unit ID.</p>
     <p v-else-if="unitQuery.error.value" class="settings-unit-edit-page__error">
@@ -190,8 +184,6 @@ async function saveResponsibles(): Promise<void> {
     <template v-else-if="unitQuery.data.value">
       <div class="settings-unit-edit-page__grid">
         <div class="settings-unit-edit-page__card settings-unit-edit-page__card--left">
-          <p v-if="unitError" class="settings-unit-edit-page__error">{{ unitError }}</p>
-
           <form class="settings-unit-edit-page__form" @submit.prevent="saveUnit">
             <UiFormField
               id="settings-unit-edit-name"
@@ -201,7 +193,14 @@ async function saveResponsibles(): Promise<void> {
               @update:model-value="unitName = $event"
             />
 
-            <UiButton type="submit" :disabled="updateUnitMutation.isPending.value">
+            <UiButton
+              type="submit"
+              tone="success"
+              :disabled="updateUnitMutation.isPending.value"
+            >
+              <template #icon>
+                <Save :size="16" />
+              </template>
               {{ updateUnitMutation.isPending.value ? 'Saving...' : 'Save unit' }}
             </UiButton>
           </form>
@@ -226,14 +225,19 @@ async function saveResponsibles(): Promise<void> {
             type="button"
             size="sm"
             variant="ghost"
+            tone="success"
             :disabled="usersQuery.isLoading.value || unitResponsiblesQuery.isLoading.value"
             @click="responsibleRows = [createResponsibleRow()]"
           >
+            <template #icon>
+              <Plus :size="16" />
+            </template>
             Add first responsible
           </UiButton>
 
           <UiButton
             type="button"
+            tone="success"
             :disabled="
               replaceUnitResponsiblesMutation.isPending.value ||
               usersQuery.isLoading.value ||
@@ -241,6 +245,9 @@ async function saveResponsibles(): Promise<void> {
             "
             @click="saveResponsibles"
           >
+            <template #icon>
+              <Save :size="16" />
+            </template>
             {{
               replaceUnitResponsiblesMutation.isPending.value
                 ? 'Saving responsibles...'
@@ -300,11 +307,6 @@ async function saveResponsibles(): Promise<void> {
     font-size: 0.875rem;
   }
 
-  &__success {
-    margin: 0;
-    color: var(--color-success);
-    font-size: 0.875rem;
-  }
 }
 
 @media (max-width: 900px) {

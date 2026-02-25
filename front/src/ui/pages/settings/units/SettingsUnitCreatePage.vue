@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import {ref} from 'vue'
+import {Plus} from 'lucide-vue-next'
 import {useRouter} from 'vue-router'
 import {useCreateUnitMutation} from '@/domain/units/queries'
 import {getApiErrorMessage} from '@/shared/http/errors'
+import {showErrorToast, showSuccessToast} from '@/shared/ui/toast'
 import UiButton from '@/ui/components/common/UiButton.vue'
 import UiFormField from '@/ui/components/common/UiFormField.vue'
 
@@ -10,19 +12,17 @@ const router = useRouter()
 const createUnitMutation = useCreateUnitMutation()
 
 const name = ref('')
-const errorMessage = ref<string | null>(null)
 
 async function submitCreate(): Promise<void> {
-  errorMessage.value = null
-
   try {
     const unit = await createUnitMutation.mutateAsync({
       name: name.value.trim(),
     })
 
+    showSuccessToast('Unit created successfully.')
     void router.push({name: 'settings-units-edit', params: {id: String(unit.id)}})
   } catch (error: unknown) {
-    errorMessage.value = getApiErrorMessage(error)
+    showErrorToast(getApiErrorMessage(error))
   }
 }
 </script>
@@ -32,8 +32,6 @@ async function submitCreate(): Promise<void> {
     <p class="settings-unit-form-page__text">
       Create a new unit, then continue to the edit page to assign responsibles.
     </p>
-
-    <p v-if="errorMessage" class="settings-unit-form-page__error">{{ errorMessage }}</p>
 
     <form class="settings-unit-form-page__form" @submit.prevent="submitCreate">
       <UiFormField
@@ -48,7 +46,10 @@ async function submitCreate(): Promise<void> {
         <UiButton type="button" variant="ghost" @click="router.push({name: 'settings-units'})">
           Cancel
         </UiButton>
-        <UiButton type="submit" :disabled="createUnitMutation.isPending.value">
+        <UiButton type="submit" tone="success" :disabled="createUnitMutation.isPending.value">
+          <template #icon>
+            <Plus :size="16" />
+          </template>
           {{ createUnitMutation.isPending.value ? 'Creating...' : 'Create unit' }}
         </UiButton>
       </div>
@@ -78,10 +79,5 @@ async function submitCreate(): Promise<void> {
     flex-wrap: wrap;
   }
 
-  &__error {
-    margin: 0;
-    color: var(--color-danger);
-    font-size: 0.875rem;
-  }
 }
 </style>

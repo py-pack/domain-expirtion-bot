@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {computed} from 'vue'
+import {CornerUpLeft, Plus} from 'lucide-vue-next'
 import {useRoute, useRouter} from 'vue-router'
 import {useUnitQuery} from '@/domain/units/queries'
 import UiButton from '@/ui/components/common/UiButton.vue'
@@ -111,13 +112,23 @@ function goBackToUnits(): void {
     :breadcrumbs="pageBreadcrumbs"
   >
     <template v-if="showCreateUnitAction" #actions>
-      <UiButton @click="openCreateUnitPage">Create unit</UiButton>
+      <UiButton tone="success" @click="openCreateUnitPage">
+        <template #icon>
+          <Plus :size="16" />
+        </template>
+        Create unit
+      </UiButton>
     </template>
     <template
       v-else-if="route.name === 'settings-units-create' || route.name === 'settings-units-edit'"
       #actions
     >
-      <UiButton variant="ghost" @click="goBackToUnits">Back to units</UiButton>
+      <UiButton variant="ghost" @click="goBackToUnits">
+        <template #icon>
+          <CornerUpLeft :size="16" />
+        </template>
+        Back to units
+      </UiButton>
     </template>
 
     <RouterView />

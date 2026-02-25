@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {computed, ref, watch} from 'vue'
+import {CornerUpLeft, Plus, Save} from 'lucide-vue-next'
 import {useRoute, useRouter} from 'vue-router'
 import type {UnitResponsibleLevel} from '@/domain/units/model'
 import {useUnitsQuery} from '@/domain/units/queries'
@@ -10,6 +11,7 @@ import {
   useUserUnitAssignmentsQuery,
 } from '@/domain/users/queries'
 import {getApiErrorMessage} from '@/shared/http/errors'
+import {showErrorToast, showSuccessToast} from '@/shared/ui/toast'
 import UiButton from '@/ui/components/common/UiButton.vue'
 import UiEntityPageLayout from '@/ui/layout/UiEntityPageLayout.vue'
 import UiFormField from '@/ui/components/common/UiFormField.vue'
@@ -32,9 +34,7 @@ const replaceUserUnitAssignmentsMutation = useReplaceUserUnitAssignmentsMutation
 const fullName = ref('')
 const password = ref('')
 const isActive = ref(true)
-const errorMessage = ref<string | null>(null)
 const unitAssignmentsError = ref<string | null>(null)
-const successMessage = ref<string | null>(null)
 const initializedUserId = ref<number | null>(null)
 const initializedAssignmentsUserId = ref<number | null>(null)
 const unitAssignmentRows = ref<UserUnitAssignmentDraftRow[]>([])
@@ -108,8 +108,6 @@ watch(
     fullName.value = selectedUser.value.full_name
     isActive.value = selectedUser.value.is_active
     password.value = ''
-    errorMessage.value = null
-    successMessage.value = null
     initializedUserId.value = nextId
   },
   {immediate: true},
@@ -163,12 +161,10 @@ function normalizeUnitAssignments(): Array<{unit_id: number; level: UnitResponsi
 }
 
 async function submitEdit(): Promise<void> {
-  errorMessage.value = null
   unitAssignmentsError.value = null
-  successMessage.value = null
 
   if (userId.value === null || selectedUser.value === null) {
-    errorMessage.value = 'User not found.'
+    showErrorToast('User not found.')
     return
   }
 
@@ -199,9 +195,9 @@ async function submitEdit(): Promise<void> {
       },
     })
 
-    successMessage.value = 'User updated successfully.'
+    showSuccessToast('User updated successfully.')
   } catch (error: unknown) {
-    errorMessage.value = getApiErrorMessage(error)
+    showErrorToast(getApiErrorMessage(error))
   }
 }
 
@@ -225,12 +221,15 @@ function goBack(): void {
     </template>
 
     <template #actions>
-      <UiButton variant="ghost" @click="goBack">Back to list</UiButton>
+      <UiButton variant="ghost" @click="goBack">
+        <template #icon>
+          <CornerUpLeft :size="16" />
+        </template>
+        Back to list
+      </UiButton>
     </template>
 
-    <p v-if="successMessage" class="user-form-page__success">{{ successMessage }}</p>
-    <p v-if="errorMessage" class="user-form-page__error">{{ errorMessage }}</p>
-    <p v-else-if="usersQuery.error.value" class="user-form-page__error">
+    <p v-if="usersQuery.error.value" class="user-form-page__error">
       {{ getApiErrorMessage(usersQuery.error.value) }}
     </p>
 
@@ -278,11 +277,15 @@ function goBack(): void {
           <UiButton type="button" variant="ghost" @click="goBack">Cancel</UiButton>
           <UiButton
             type="submit"
+            tone="success"
             :disabled="
               updateUserMutation.isPending.value ||
               replaceUserUnitAssignmentsMutation.isPending.value
             "
           >
+            <template #icon>
+              <Save :size="16" />
+            </template>
             {{
               updateUserMutation.isPending.value ||
               replaceUserUnitAssignmentsMutation.isPending.value
@@ -313,9 +316,13 @@ function goBack(): void {
           type="button"
           size="sm"
           variant="ghost"
+          tone="success"
           :disabled="userUnitAssignmentsQuery.isLoading.value"
           @click="unitAssignmentRows = [createDraftRow()]"
         >
+          <template #icon>
+            <Plus :size="16" />
+          </template>
           Add first binding
         </UiButton>
       </aside>
@@ -374,12 +381,6 @@ function goBack(): void {
 
   &__error {
     color: var(--color-danger);
-    font-size: 0.875rem;
-    margin: 0;
-  }
-
-  &__success {
-    color: var(--color-success);
     font-size: 0.875rem;
     margin: 0;
   }

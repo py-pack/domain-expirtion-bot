@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import {computed, ref, watch} from 'vue'
+import {Save} from 'lucide-vue-next'
 import {getApiErrorMessage} from '@/shared/http/errors'
+import {showErrorToast, showSuccessToast} from '@/shared/ui/toast'
 import {
   useCurrentUserQuery,
   useUpdateCurrentUserMutation,
@@ -16,9 +18,6 @@ const fullName = ref('')
 const currentPassword = ref('')
 const newPassword = ref('')
 const confirmPassword = ref('')
-
-const errorMessage = ref<string | null>(null)
-const successMessage = ref<string | null>(null)
 
 watch(
   () => currentUserQuery.data.value,
@@ -67,18 +66,15 @@ function validatePasswordChange(): string | null {
 }
 
 async function submitProfile(): Promise<void> {
-  errorMessage.value = null
-  successMessage.value = null
-
   const normalizedName = fullName.value.trim()
   if (!normalizedName) {
-    errorMessage.value = 'Name is required.'
+    showErrorToast('Name is required.')
     return
   }
 
   const passwordValidationError = validatePasswordChange()
   if (passwordValidationError) {
-    errorMessage.value = passwordValidationError
+    showErrorToast(passwordValidationError)
     return
   }
 
@@ -90,9 +86,9 @@ async function submitProfile(): Promise<void> {
     })
 
     resetPasswordFields()
-    successMessage.value = 'Profile updated successfully.'
+    showSuccessToast('Profile updated successfully.')
   } catch (error: unknown) {
-    errorMessage.value = getApiErrorMessage(error)
+    showErrorToast(getApiErrorMessage(error))
   }
 }
 </script>
@@ -159,10 +155,10 @@ async function submitProfile(): Promise<void> {
         @update:model-value="confirmPassword = $event"
       />
 
-      <p v-if="errorMessage" class="profile-page__error">{{ errorMessage }}</p>
-      <p v-if="successMessage" class="profile-page__success">{{ successMessage }}</p>
-
-      <UiButton type="submit" :disabled="isSubmitting">
+      <UiButton type="submit" tone="success" :disabled="isSubmitting">
+        <template #icon>
+          <Save :size="16" />
+        </template>
         {{ isSubmitting ? 'Saving...' : 'Save profile' }}
       </UiButton>
     </form>
@@ -193,11 +189,6 @@ async function submitProfile(): Promise<void> {
 
   &__error {
     color: var(--color-danger);
-    font-size: 0.875rem;
-  }
-
-  &__success {
-    color: var(--color-success);
     font-size: 0.875rem;
   }
 

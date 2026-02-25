@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {computed, ref} from 'vue'
+import {Plus} from 'lucide-vue-next'
 import type {IntegrationStatus} from '@/domain/integrations/model'
 import {useIntegrationsQuery} from '@/domain/integrations/queries'
 import {integrationsService} from '@/domain/integrations/service'
@@ -64,7 +65,12 @@ const errorMessage = computed(() => {
     :breadcrumbs="[{label: 'Integrations'}]"
   >
     <template #actions>
-      <UiButton> Add integration </UiButton>
+      <UiButton tone="success">
+        <template #icon>
+          <Plus :size="16" />
+        </template>
+        Add integration
+      </UiButton>
     </template>
 
     <div class="integrations-page__controls">

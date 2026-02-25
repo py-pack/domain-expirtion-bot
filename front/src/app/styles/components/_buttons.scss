@@ -1,4 +1,12 @@
 .ui-button {
+  --ui-btn-accent: var(--color-primary);
+  --ui-btn-primary-text: #ffffff;
+  --ui-btn-neutral-text: var(--color-text);
+  --ui-btn-ghost-text: var(--color-text);
+  --ui-btn-ghost-border: var(--color-border);
+  --ui-btn-ghost-hover-bg: var(--color-surface-soft);
+  --ui-btn-ghost-hover-border: var(--color-border);
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -7,7 +15,28 @@
   border: 1px solid transparent;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s ease, border-color 0.2s ease;
+  color: var(--ui-btn-neutral-text);
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+
+  &__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 0;
+    flex-shrink: 0;
+
+    svg {
+      width: 16px;
+      height: 16px;
+      stroke-width: 2;
+    }
+  }
+
+  &__label {
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+  }
 
   &:disabled {
     cursor: not-allowed;
@@ -31,30 +60,82 @@
     font-size: 1.0625rem;
   }
 
+  &--icon-only {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  &--sm&--icon-only {
+    width: 32px;
+  }
+
+  &--md&--icon-only {
+    width: 40px;
+  }
+
+  &--lg&--icon-only {
+    width: 48px;
+  }
+
+  &--default {
+    --ui-btn-accent: var(--color-primary);
+    --ui-btn-ghost-text: var(--color-text);
+    --ui-btn-ghost-border: var(--color-border);
+    --ui-btn-ghost-hover-bg: var(--color-surface-soft);
+    --ui-btn-ghost-hover-border: var(--color-border);
+  }
+
+  &--success {
+    --ui-btn-accent: var(--color-success);
+    --ui-btn-ghost-text: var(--color-success);
+    --ui-btn-ghost-border: color-mix(in srgb, var(--color-success), var(--color-border) 60%);
+    --ui-btn-ghost-hover-bg: color-mix(in srgb, var(--color-success), transparent 92%);
+    --ui-btn-ghost-hover-border: color-mix(in srgb, var(--color-success), var(--color-border) 35%);
+  }
+
+  &--danger {
+    --ui-btn-accent: var(--color-danger);
+    --ui-btn-ghost-text: var(--color-danger);
+    --ui-btn-ghost-border: color-mix(in srgb, var(--color-danger), var(--color-border) 62%);
+    --ui-btn-ghost-hover-bg: color-mix(in srgb, var(--color-danger), transparent 92%);
+    --ui-btn-ghost-hover-border: color-mix(in srgb, var(--color-danger), var(--color-border) 38%);
+  }
+
+  &--warning {
+    --ui-btn-accent: var(--color-warning);
+    --ui-btn-ghost-text: var(--color-warning);
+    --ui-btn-ghost-border: color-mix(in srgb, var(--color-warning), var(--color-border) 60%);
+    --ui-btn-ghost-hover-bg: color-mix(in srgb, var(--color-warning), transparent 92%);
+    --ui-btn-ghost-hover-border: color-mix(in srgb, var(--color-warning), var(--color-border) 35%);
+  }
+
   &--primary {
-    color: #ffffff;
-    background: var(--color-primary);
+    color: var(--ui-btn-primary-text);
+    background: var(--ui-btn-accent);
 
     &:hover:not(:disabled) {
-      background: color-mix(in srgb, var(--color-primary), #ffffff 10%);
+      background: color-mix(in srgb, var(--ui-btn-accent), #ffffff 10%);
     }
   }
 
   &--secondary {
+    color: var(--ui-btn-ghost-text);
     background: var(--color-surface-soft);
     border-color: var(--color-border);
 
     &:hover:not(:disabled) {
-      border-color: var(--color-primary);
+      border-color: var(--ui-btn-accent);
     }
   }
 
   &--ghost {
+    color: var(--ui-btn-ghost-text);
     background: transparent;
-    border-color: var(--color-border);
+    border-color: var(--ui-btn-ghost-border);
 
     &:hover:not(:disabled) {
-      background: var(--color-surface-soft);
+      background: var(--ui-btn-ghost-hover-bg);
+      border-color: var(--ui-btn-ghost-hover-border);
     }
   }
 }

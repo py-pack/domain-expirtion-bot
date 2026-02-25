@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import {Plus, Trash2} from 'lucide-vue-next'
 import type {UnitResponsibleLevel} from '@/domain/units/model'
 import UiButton from '@/ui/components/common/UiButton.vue'
 
@@ -117,7 +118,17 @@ function onLevelChange(key: string, event: Event): void {
         <p class="unit-responsibles-repeater__description">{{ description }}</p>
       </div>
 
-      <UiButton type="button" size="sm" variant="ghost" :disabled="disabled" @click="addRow">
+      <UiButton
+        type="button"
+        size="sm"
+        variant="ghost"
+        tone="success"
+        :disabled="disabled"
+        @click="addRow"
+      >
+        <template #icon>
+          <Plus :size="16" />
+        </template>
         Add responsible
       </UiButton>
     </div>
@@ -164,9 +175,13 @@ function onLevelChange(key: string, event: Event): void {
           type="button"
           size="sm"
           variant="ghost"
+          tone="danger"
           :disabled="disabled"
           @click="removeRow(row.key)"
         >
+          <template #icon>
+            <Trash2 :size="16" />
+          </template>
           Remove
         </UiButton>
       </div>

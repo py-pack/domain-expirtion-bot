@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import {Settings} from 'lucide-vue-next'
+import {Pencil} from 'lucide-vue-next'
 import type {Integration} from '@/domain/integrations/model'
+import UiButton from '@/ui/components/common/UiButton.vue'
 import UiStatusPill from '@/ui/components/common/UiStatusPill.vue'
 import UiTable from '@/ui/components/common/UiTable.vue'
 import UiUnitTag from '@/ui/components/common/UiUnitTag.vue'
@@ -44,9 +45,17 @@ defineProps<{
         </td>
         <td>{{ integration.lastSync }}</td>
         <td>
-          <button class="integrations-table__edit" type="button">
-            <Settings :size="16" />
-          </button>
+          <UiButton
+            type="button"
+            size="sm"
+            variant="ghost"
+            icon-only
+            aria-label="Edit integration"
+          >
+            <template #icon>
+              <Pencil :size="16" />
+            </template>
+          </UiButton>
         </td>
       </tr>
     </tbody>
@@ -68,20 +77,6 @@ defineProps<{
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-1);
-  }
-
-  &__edit {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--color-border);
-
-    &:hover {
-      background: var(--color-surface-soft);
-    }
   }
 }
 </style>

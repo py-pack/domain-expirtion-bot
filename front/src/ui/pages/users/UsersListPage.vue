@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import {computed, ref} from 'vue'
+import {computed} from 'vue'
+import {Pencil, Plus, Trash2} from 'lucide-vue-next'
 import {useRouter} from 'vue-router'
 import {
   useDeleteSystemUserMutation,
   useSystemUsersQuery,
 } from '@/domain/users/queries'
 import {getApiErrorMessage} from '@/shared/http/errors'
+import {showErrorToast, showSuccessToast} from '@/shared/ui/toast'
 import UiButton from '@/ui/components/common/UiButton.vue'
 import UiEntityPageLayout from '@/ui/layout/UiEntityPageLayout.vue'
 import UiTable from '@/ui/components/common/UiTable.vue'
@@ -15,7 +17,6 @@ const router = useRouter()
 const usersQuery = useSystemUsersQuery()
 const deleteUserMutation = useDeleteSystemUserMutation()
 
-const errorMessage = ref<string | null>(null)
 const users = computed(() => usersQuery.data.value ?? [])
 
 function openCreatePage(): void {
@@ -27,12 +28,11 @@ function openEditPage(userId: number): void {
 }
 
 async function removeUser(userId: number): Promise<void> {
-  errorMessage.value = null
-
   try {
     await deleteUserMutation.mutateAsync(userId)
+    showSuccessToast('User deleted successfully.')
   } catch (error: unknown) {
-    errorMessage.value = getApiErrorMessage(error)
+    showErrorToast(getApiErrorMessage(error))
   }
 }
 </script>
@@ -45,11 +45,15 @@ async function removeUser(userId: number): Promise<void> {
     :breadcrumbs="[{label: 'Users'}]"
   >
     <template #actions>
-      <UiButton @click="openCreatePage">Create user</UiButton>
+      <UiButton tone="success" @click="openCreatePage">
+        <template #icon>
+          <Plus :size="16" />
+        </template>
+        Create user
+      </UiButton>
     </template>
 
-    <p v-if="errorMessage" class="users-page__error">{{ errorMessage }}</p>
-    <p v-else-if="usersQuery.error.value" class="users-page__error">
+    <p v-if="usersQuery.error.value" class="users-page__error">
       {{ getApiErrorMessage(usersQuery.error.value) }}
     </p>
 
@@ -75,14 +79,21 @@ async function removeUser(userId: number): Promise<void> {
           <td>{{ user.is_active ? 'Active' : 'Inactive' }}</td>
           <td class="users-page__actions">
             <UiButton size="sm" variant="ghost" @click="openEditPage(user.id)">
+              <template #icon>
+                <Pencil :size="16" />
+              </template>
               Edit
             </UiButton>
             <UiButton
               size="sm"
               variant="ghost"
+              tone="danger"
               :disabled="deleteUserMutation.isPending.value"
               @click="removeUser(user.id)"
             >
+              <template #icon>
+                <Trash2 :size="16" />
+              </template>
               Delete
             </UiButton>
           </td>
