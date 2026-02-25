@@ -42,6 +42,11 @@ function logout(): void {
   emit('logout')
 }
 
+async function openProfile(): Promise<void> {
+  showDropdown.value = false
+  await router.push('/profile')
+}
+
 async function openSettings(): Promise<void> {
   showDropdown.value = false
   await router.push('/settings')
@@ -85,6 +90,7 @@ onBeforeUnmount(() => {
         <RouterLink to="/logs" class="topbar__link" active-class="topbar__link--active">
           Logs
         </RouterLink>
+
       </nav>
 
       <div class="topbar__actions">
@@ -104,6 +110,15 @@ onBeforeUnmount(() => {
           </button>
 
           <div v-if="showDropdown" class="topbar__dropdown">
+            <UiButton
+              size="sm"
+              variant="ghost"
+              class="topbar__dropdown-action"
+              @click="openProfile"
+            >
+              <UserRound :size="14" />
+              Profile
+            </UiButton>
             <UiButton
               size="sm"
               variant="ghost"
@@ -270,6 +285,7 @@ onBeforeUnmount(() => {
       grid-area: nav;
       overflow-x: auto;
       padding-bottom: var(--space-1);
+      align-items: stretch;
     }
   }
 }

@@ -1,171 +1,107 @@
 <script setup lang="ts">
-import {computed, ref, watch} from 'vue'
-import {getApiErrorMessage} from '@/shared/http/errors'
-import {
-  useCurrentUserQuery,
-  useUpdateCurrentUserMutation,
-} from '@/domain/users/queries'
-import UiButton from '@/ui/components/common/UiButton.vue'
+import {computed} from 'vue'
+import {useRoute, useRouter} from 'vue-router'
 import UiEntityPageLayout from '@/ui/layout/UiEntityPageLayout.vue'
-import UiFormField from '@/ui/components/common/UiFormField.vue'
 
-const currentUserQuery = useCurrentUserQuery()
-const updateCurrentUserMutation = useUpdateCurrentUserMutation()
+type SettingsTab = 'general' | 'units' | 'notifications'
 
-const fullName = ref('')
-const currentPassword = ref('')
-const newPassword = ref('')
-const confirmPassword = ref('')
+type SettingsTabItem = {
+  id: SettingsTab
+  label: string
+  description: string
+}
 
-const errorMessage = ref<string | null>(null)
-const successMessage = ref<string | null>(null)
-
-watch(
-  () => currentUserQuery.data.value,
-  (user) => {
-    if (!user) {
-      return
-    }
-
-    fullName.value = user.full_name
+const tabs: SettingsTabItem[] = [
+  {
+    id: 'general',
+    label: 'General',
+    description: 'Global application preferences and defaults.',
   },
-  {immediate: true},
-)
+  {
+    id: 'units',
+    label: 'Units',
+    description: 'Configure units and formatting used across the admin panel.',
+  },
+  {
+    id: 'notifications',
+    label: 'Notifications',
+    description: 'Notification-related defaults and delivery preferences.',
+  },
+]
 
-const email = computed(() => currentUserQuery.data.value?.email ?? '')
-const isSubmitting = computed(() => updateCurrentUserMutation.isPending.value)
+const route = useRoute()
+const router = useRouter()
 
-function resetPasswordFields(): void {
-  currentPassword.value = ''
-  newPassword.value = ''
-  confirmPassword.value = ''
+function isSettingsTab(value: unknown): value is SettingsTab {
+  return value === 'general' || value === 'units' || value === 'notifications'
 }
 
-function validatePasswordChange(): string | null {
-  const hasAnyPasswordField =
-    currentPassword.value.length > 0 ||
-    newPassword.value.length > 0 ||
-    confirmPassword.value.length > 0
-
-  if (!hasAnyPasswordField) {
-    return null
+const activeTab = computed<SettingsTab>(() => {
+  const tab = route.query.tab
+  if (typeof tab === 'string' && isSettingsTab(tab)) {
+    return tab
   }
 
-  if (!currentPassword.value || !newPassword.value || !confirmPassword.value) {
-    return 'Fill current password, new password, and confirm password to change password.'
-  }
+  return 'general'
+})
 
-  if (newPassword.value.length < 8) {
-    return 'New password must be at least 8 characters.'
-  }
-
-  if (newPassword.value !== confirmPassword.value) {
-    return 'New password and confirmation do not match.'
-  }
-
-  return null
-}
-
-async function submitSettings(): Promise<void> {
-  errorMessage.value = null
-  successMessage.value = null
-
-  const normalizedName = fullName.value.trim()
-  if (!normalizedName) {
-    errorMessage.value = 'Name is required.'
-    return
-  }
-
-  const passwordValidationError = validatePasswordChange()
-  if (passwordValidationError) {
-    errorMessage.value = passwordValidationError
-    return
-  }
-
-  try {
-    await updateCurrentUserMutation.mutateAsync({
-      full_name: normalizedName,
-      current_password: currentPassword.value || undefined,
-      new_password: newPassword.value || undefined,
-    })
-
-    resetPasswordFields()
-    successMessage.value = 'Settings updated successfully.'
-  } catch (error: unknown) {
-    errorMessage.value = getApiErrorMessage(error)
-  }
+async function selectTab(tab: SettingsTab): Promise<void> {
+  await router.replace({
+    path: '/settings',
+    query: tab === 'general' ? {} : {tab},
+  })
 }
 </script>
 
 <template>
   <UiEntityPageLayout
     class="settings-page"
-    title="Account Settings"
-    description="Update your display name and change the account password."
+    title="Settings"
+    description="System-level settings grouped by sections."
     :breadcrumbs="[{label: 'Settings'}]"
   >
-    <template #meta>
-      <p v-if="email" class="settings-page__meta">Email: {{ email }}</p>
-    </template>
+    <div class="settings-page__tabs" role="tablist" aria-label="Settings sections">
+      <button
+        v-for="tab in tabs"
+        :key="tab.id"
+        type="button"
+        class="settings-page__tab"
+        :class="{'settings-page__tab--active': activeTab === tab.id}"
+        role="tab"
+        :aria-selected="activeTab === tab.id"
+        @click="selectTab(tab.id)"
+      >
+        {{ tab.label }}
+      </button>
+    </div>
 
-    <p v-if="currentUserQuery.isLoading.value" class="settings-page__hint">
-      Loading account...
-    </p>
-    <p v-else-if="currentUserQuery.error.value" class="settings-page__error">
-      {{ getApiErrorMessage(currentUserQuery.error.value) }}
-    </p>
+    <section class="settings-page__panel" role="tabpanel" :aria-label="activeTab">
+      <template v-if="activeTab === 'general'">
+        <h2 class="settings-page__panel-title">General</h2>
+        <p class="settings-page__text">
+          General system settings will be configured here.
+        </p>
+      </template>
 
-    <form
-      v-else
-      class="settings-page__form"
-      autocomplete="off"
-      @submit.prevent="submitSettings"
-    >
-      <UiFormField
-        id="settings-full-name"
-        label="Name"
-        :model-value="fullName"
-        autocomplete="name"
-        required
-        @update:model-value="fullName = $event"
-      />
+      <template v-else-if="activeTab === 'units'">
+        <h2 class="settings-page__panel-title">Units</h2>
+        <p class="settings-page__text">
+          Manage measurement units and formatting rules used in reports and forms.
+        </p>
+        <div class="settings-page__card">
+          <p class="settings-page__text-muted">
+            Unit management UI placeholder. Add unit list/table and actions here.
+          </p>
+        </div>
+      </template>
 
-      <div class="settings-page__divider" />
-
-      <UiFormField
-        id="settings-current-password"
-        label="Current password"
-        type="password"
-        autocomplete="current-password"
-        :model-value="currentPassword"
-        @update:model-value="currentPassword = $event"
-      />
-
-      <UiFormField
-        id="settings-new-password"
-        label="New password"
-        type="password"
-        autocomplete="new-password"
-        :model-value="newPassword"
-        @update:model-value="newPassword = $event"
-      />
-
-      <UiFormField
-        id="settings-confirm-password"
-        label="Confirm new password"
-        type="password"
-        autocomplete="new-password"
-        :model-value="confirmPassword"
-        @update:model-value="confirmPassword = $event"
-      />
-
-      <p v-if="errorMessage" class="settings-page__error">{{ errorMessage }}</p>
-      <p v-if="successMessage" class="settings-page__success">{{ successMessage }}</p>
-
-      <UiButton type="submit" :disabled="isSubmitting">
-        {{ isSubmitting ? 'Saving...' : 'Save settings' }}
-      </UiButton>
-    </form>
+      <template v-else>
+        <h2 class="settings-page__panel-title">Notifications</h2>
+        <p class="settings-page__text">
+          Notification defaults and alert settings will be available here.
+        </p>
+      </template>
+    </section>
   </UiEntityPageLayout>
 </template>
 
@@ -174,35 +110,62 @@ async function submitSettings(): Promise<void> {
   display: grid;
   gap: var(--space-4);
 
-  &__form {
+  &__tabs {
+    display: flex;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+    padding-bottom: var(--space-2);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  &__tab {
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    color: var(--color-text);
+    border-radius: var(--radius-sm);
+    min-height: 36px;
+    padding: 0 var(--space-3);
+    font: inherit;
+    cursor: pointer;
+
+    &:hover {
+      background: var(--color-surface-soft);
+    }
+
+    &--active {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+      background: var(--color-primary-soft);
+    }
+  }
+
+  &__panel {
     display: grid;
     gap: var(--space-3);
-    max-width: 620px;
+    max-width: 720px;
   }
 
-  &__divider {
-    height: 1px;
-    background: var(--color-border);
-    margin: var(--space-1) 0;
-  }
-
-  &__hint {
-    color: var(--color-text-muted);
-    font-size: 0.875rem;
-  }
-
-  &__error {
-    color: var(--color-danger);
-    font-size: 0.875rem;
-  }
-
-  &__success {
-    color: var(--color-success);
-    font-size: 0.875rem;
-  }
-
-  &__meta {
+  &__panel-title {
     margin: 0;
+    font-size: 1.125rem;
+  }
+
+  &__text {
+    margin: 0;
+    color: var(--color-text);
+  }
+
+  &__text-muted {
+    margin: 0;
+    color: var(--color-text-muted);
+  }
+
+  &__card {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    padding: var(--space-3);
+    box-shadow: var(--card-shadow);
   }
 }
 </style>

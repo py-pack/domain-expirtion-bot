@@ -6,6 +6,7 @@ import DashboardPage from '@/ui/pages/DashboardPage.vue'
 import IntegrationsPage from '@/ui/pages/IntegrationsPage.vue'
 import DomainsPage from '@/ui/pages/DomainsPage.vue'
 import LogsPage from '@/ui/pages/LogsPage.vue'
+import ProfilePage from '@/ui/pages/ProfilePage.vue'
 import SettingsPage from '@/ui/pages/SettingsPage.vue'
 import UserCreatePage from '@/ui/pages/users/UserCreatePage.vue'
 import UserEditPage from '@/ui/pages/users/UserEditPage.vue'
@@ -58,6 +59,11 @@ const routes: RouteRecordRaw[] = [
         path: 'users/:id/edit',
         name: 'users-edit',
         component: UserEditPage,
+      },
+      {
+        path: 'profile',
+        name: 'profile',
+        component: ProfilePage,
       },
       {
         path: 'settings',
