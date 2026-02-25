@@ -9,8 +9,10 @@ from app.core.database import get_db
 from .schemas import (
     CreateUserRequest,
     CurrentUserResponse,
+    ReplaceUserUnitAssignmentsRequest,
     UpdateCurrentUserRequest,
     UpdateUserRequest,
+    UserUnitAssignmentResponse,
     UserResponse,
 )
 from .service import (
@@ -18,11 +20,14 @@ from .service import (
     InvalidCurrentPasswordError,
     UserAlreadyExistsError,
     UserNotFoundError,
+    UserUnitAssignmentsUnitsNotFoundError,
     create_system_user,
     delete_system_user,
     get_current_user_profile,
     get_system_user,
+    list_system_user_unit_assignments,
     list_system_users,
+    replace_system_user_unit_assignments,
     update_system_user,
     update_current_user_profile,
 )
@@ -155,3 +160,38 @@ def remove_user(
         delete_system_user(db=db, user_id=user_id)
     except UserNotFoundError as error:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail=str(error)) from error
+
+
+@users_router.get("/{user_id}/units", response_model=list[UserUnitAssignmentResponse])
+def get_user_units(
+    user_id: int,
+    access_token: str = Depends(get_access_token),
+    db: Session = Depends(get_db),
+):
+    _ = access_token
+    try:
+        return list_system_user_unit_assignments(db=db, user_id=user_id)
+    except UserNotFoundError as error:
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail=str(error)) from error
+
+
+@users_router.put("/{user_id}/units", response_model=list[UserUnitAssignmentResponse])
+def put_user_units(
+    user_id: int,
+    payload: ReplaceUserUnitAssignmentsRequest,
+    access_token: str = Depends(get_access_token),
+    db: Session = Depends(get_db),
+):
+    _ = access_token
+    try:
+        return replace_system_user_unit_assignments(
+            db=db,
+            user_id=user_id,
+            assignments=[assignment.model_dump(mode="json") for assignment in payload.assignments],
+        )
+    except UserNotFoundError as error:
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail=str(error)) from error
+    except UserUnitAssignmentsUnitsNotFoundError as error:
+        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail=str(error)) from error
+    except ValueError as error:
+        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail=str(error)) from error

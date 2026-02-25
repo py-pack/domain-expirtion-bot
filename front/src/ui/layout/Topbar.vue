@@ -49,7 +49,7 @@ async function openProfile(): Promise<void> {
 
 async function openSettings(): Promise<void> {
   showDropdown.value = false
-  await router.push('/settings')
+  await router.push({name: 'settings-general'})
 }
 
 function toggleTheme(): void {

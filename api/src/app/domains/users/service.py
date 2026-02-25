@@ -4,14 +4,18 @@ from sqlalchemy.orm import Session
 
 from app.domains.auth.models import User
 from app.domains.auth.service import decode_jwt, hash_password, verify_password
+from app.domains.units.models import UnitResponsibleLevel
 
-from .models import CurrentUserProfile, UserProfile
+from .models import CurrentUserProfile, UserProfile, UserUnitAssignment
 from .repository import (
     create_user,
     delete_user,
     get_user_by_email,
     get_user_by_id,
+    list_units_by_ids,
+    list_user_unit_assignments,
     list_users,
+    replace_user_unit_assignments,
     save_user,
 )
 
@@ -34,6 +38,12 @@ class InvalidCurrentPasswordError(UsersDomainError):
 
 class UserAlreadyExistsError(UsersDomainError):
     pass
+
+
+class UserUnitAssignmentsUnitsNotFoundError(UsersDomainError):
+    def __init__(self, missing_unit_ids: list[int]):
+        self.missing_unit_ids = missing_unit_ids
+        super().__init__(f"Units not found: {', '.join(str(unit_id) for unit_id in missing_unit_ids)}")
 
 
 def _extract_user_id_from_access_token(access_token: str) -> int:
@@ -71,6 +81,18 @@ def _build_user_profile(user: User) -> UserProfile:
         is_active=user.is_active,
         settings=user.settings,
     )
+
+
+def _build_user_unit_assignment(unit_id: int, unit_name: str, level: object) -> UserUnitAssignment:
+    level_value = level.value if isinstance(level, UnitResponsibleLevel) else str(level)
+    return UserUnitAssignment(unit_id=unit_id, unit_name=unit_name, level=level_value)
+
+
+def _normalize_unit_assignment_level(level: str) -> UnitResponsibleLevel:
+    try:
+        return UnitResponsibleLevel(level)
+    except ValueError as error:
+        raise ValueError("Unit assignment level must be one of: View, Edit, Full") from error
 
 
 def get_current_user_profile(db: Session, access_token: str) -> CurrentUserProfile:
@@ -193,3 +215,50 @@ def delete_system_user(db: Session, user_id: int) -> None:
         raise UserNotFoundError("User not found")
 
     delete_user(db, user)
+
+
+def list_system_user_unit_assignments(db: Session, user_id: int) -> list[UserUnitAssignment]:
+    user = get_user_by_id(db, user_id)
+    if not user:
+        raise UserNotFoundError("User not found")
+
+    rows = list_user_unit_assignments(db, user_id)
+    return [_build_user_unit_assignment(unit_id, unit_name, level) for unit_id, unit_name, level in rows]
+
+
+def replace_system_user_unit_assignments(
+    db: Session,
+    user_id: int,
+    assignments: list[dict[str, object]],
+) -> list[UserUnitAssignment]:
+    user = get_user_by_id(db, user_id)
+    if not user:
+        raise UserNotFoundError("User not found")
+
+    normalized_assignments: list[tuple[int, UnitResponsibleLevel]] = []
+    unit_ids: list[int] = []
+    seen_unit_ids: set[int] = set()
+
+    for assignment in assignments:
+        unit_id_raw = assignment.get("unit_id")
+        level_raw = assignment.get("level")
+        if not isinstance(unit_id_raw, int) or unit_id_raw <= 0:
+            raise ValueError("Invalid unit_id")
+        if not isinstance(level_raw, str):
+            raise ValueError("Invalid level")
+        if unit_id_raw in seen_unit_ids:
+            raise ValueError("Assigned units must be unique")
+
+        seen_unit_ids.add(unit_id_raw)
+        unit_ids.append(unit_id_raw)
+        normalized_assignments.append((unit_id_raw, _normalize_unit_assignment_level(level_raw)))
+
+    existing_units = list_units_by_ids(db, unit_ids)
+    existing_unit_ids = {unit.id for unit in existing_units}
+    missing_unit_ids = [unit_id for unit_id in unit_ids if unit_id not in existing_unit_ids]
+    if missing_unit_ids:
+        raise UserUnitAssignmentsUnitsNotFoundError(missing_unit_ids)
+
+    replace_user_unit_assignments(db, user_id=user_id, assignments=normalized_assignments)
+    rows = list_user_unit_assignments(db, user_id)
+    return [_build_user_unit_assignment(unit_id, unit_name, level) for unit_id, unit_name, level in rows]

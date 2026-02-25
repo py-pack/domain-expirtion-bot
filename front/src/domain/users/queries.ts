@@ -1,6 +1,8 @@
 import {useMutation, useQuery, useQueryClient} from '@tanstack/vue-query'
+import {computed, type MaybeRefOrGetter, toValue} from 'vue'
 import type {
   CreateSystemUserPayload,
+  ReplaceUserUnitAssignmentsPayload,
   UpdateCurrentUserPayload,
   UpdateSystemUserPayload,
 } from '@/domain/users/model'
@@ -9,6 +11,7 @@ import {usersService} from '@/domain/users/service'
 export const usersQueryKeys = {
   me: ['users', 'me'] as const,
   list: ['users', 'list'] as const,
+  units: (userId: number) => ['users', 'units', userId] as const,
 }
 
 export function useCurrentUserQuery() {
@@ -77,6 +80,44 @@ export function useDeleteSystemUserMutation() {
     mutationFn: async (id: number) => usersService.deleteSystemUser(id),
     onSuccess: async () => {
       await queryClient.invalidateQueries({queryKey: usersQueryKeys.list})
+    },
+  })
+}
+
+export function useUserUnitAssignmentsQuery(userId: MaybeRefOrGetter<number | null>) {
+  return useQuery({
+    queryKey: computed(() => {
+      const id = toValue(userId)
+      return id === null ? ['users', 'units', 'none'] : usersQueryKeys.units(id)
+    }),
+    queryFn: async () => {
+      const id = toValue(userId)
+      if (id === null) {
+        throw new Error('User ID is required')
+      }
+
+      return usersService.getUserUnitAssignments(id)
+    },
+    enabled: computed(() => toValue(userId) !== null),
+    staleTime: 15_000,
+  })
+}
+
+export function useReplaceUserUnitAssignmentsMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({
+      userId,
+      payload,
+    }: {
+      userId: number
+      payload: ReplaceUserUnitAssignmentsPayload
+    }) => usersService.replaceUserUnitAssignments(userId, payload),
+    onSuccess: async (_, variables) => {
+      await queryClient.invalidateQueries({
+        queryKey: usersQueryKeys.units(variables.userId),
+      })
     },
   })
 }

@@ -3,11 +3,15 @@ import {
   createSystemUserPayloadSchema,
   type CreateSystemUserPayload,
   type CurrentUser,
+  type ReplaceUserUnitAssignmentsPayload,
   type SystemUser,
   type UpdateCurrentUserPayload,
   type UpdateSystemUserPayload,
   currentUserSchema,
+  replaceUserUnitAssignmentsPayloadSchema,
   systemUserSchema,
+  type UserUnitAssignment,
+  userUnitAssignmentSchema,
   updateSystemUserPayloadSchema,
   updateCurrentUserPayloadSchema,
 } from '@/domain/users/model'
@@ -19,6 +23,11 @@ export interface UsersRepository {
   createSystemUser(payload: CreateSystemUserPayload): Promise<SystemUser>
   updateSystemUser(id: number, payload: UpdateSystemUserPayload): Promise<SystemUser>
   deleteSystemUser(id: number): Promise<void>
+  getUserUnitAssignments(userId: number): Promise<UserUnitAssignment[]>
+  replaceUserUnitAssignments(
+    userId: number,
+    payload: ReplaceUserUnitAssignmentsPayload,
+  ): Promise<UserUnitAssignment[]>
 }
 
 async function parseCurrentUser(data: unknown): Promise<CurrentUser> {
@@ -31,6 +40,10 @@ async function parseSystemUser(data: unknown): Promise<SystemUser> {
 
 async function parseSystemUsers(data: unknown): Promise<SystemUser[]> {
   return systemUserSchema.array().parseAsync(data)
+}
+
+async function parseUserUnitAssignments(data: unknown): Promise<UserUnitAssignment[]> {
+  return userUnitAssignmentSchema.array().parseAsync(data)
 }
 
 export const usersRepository: UsersRepository = {
@@ -67,5 +80,19 @@ export const usersRepository: UsersRepository = {
 
   async deleteSystemUser(id: number): Promise<void> {
     await httpClient.delete(`/users/${id}`)
+  },
+
+  async getUserUnitAssignments(userId: number): Promise<UserUnitAssignment[]> {
+    const {data} = await httpClient.get(`/users/${userId}/units`)
+    return parseUserUnitAssignments(data)
+  },
+
+  async replaceUserUnitAssignments(
+    userId: number,
+    payload: ReplaceUserUnitAssignmentsPayload,
+  ): Promise<UserUnitAssignment[]> {
+    const requestPayload = replaceUserUnitAssignmentsPayloadSchema.parse(payload)
+    const {data} = await httpClient.put(`/users/${userId}/units`, requestPayload)
+    return parseUserUnitAssignments(data)
   },
 }

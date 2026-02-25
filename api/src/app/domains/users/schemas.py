@@ -1,6 +1,7 @@
 from typing import Any, Optional
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, model_validator
+from app.domains.units.models import UnitResponsibleLevel
 
 
 class CurrentUserResponse(BaseModel):
@@ -35,6 +36,32 @@ class UserResponse(BaseModel):
     full_name: str
     is_active: bool
     settings: dict[str, Any]
+
+
+class UserUnitAssignmentResponse(BaseModel):
+    unit_id: int
+    unit_name: str
+    level: UnitResponsibleLevel
+
+
+class UserUnitAssignmentRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    unit_id: int = Field(gt=0)
+    level: UnitResponsibleLevel
+
+
+class ReplaceUserUnitAssignmentsRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    assignments: list[UserUnitAssignmentRequest] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def validate_unique_units(self) -> "ReplaceUserUnitAssignmentsRequest":
+        unit_ids = [assignment.unit_id for assignment in self.assignments]
+        if len(set(unit_ids)) != len(unit_ids):
+            raise ValueError("assignments.unit_id must be unique")
+        return self
 
 
 class CreateUserRequest(BaseModel):

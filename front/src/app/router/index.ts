@@ -8,6 +8,11 @@ import DomainsPage from '@/ui/pages/DomainsPage.vue'
 import LogsPage from '@/ui/pages/LogsPage.vue'
 import ProfilePage from '@/ui/pages/ProfilePage.vue'
 import SettingsPage from '@/ui/pages/SettingsPage.vue'
+import SettingsGeneralPage from '@/ui/pages/settings/SettingsGeneralPage.vue'
+import SettingsNotificationsPage from '@/ui/pages/settings/SettingsNotificationsPage.vue'
+import SettingsUnitCreatePage from '@/ui/pages/settings/units/SettingsUnitCreatePage.vue'
+import SettingsUnitEditPage from '@/ui/pages/settings/units/SettingsUnitEditPage.vue'
+import SettingsUnitsListPage from '@/ui/pages/settings/units/SettingsUnitsListPage.vue'
 import UserCreatePage from '@/ui/pages/users/UserCreatePage.vue'
 import UserEditPage from '@/ui/pages/users/UserEditPage.vue'
 import UsersListPage from '@/ui/pages/users/UsersListPage.vue'
@@ -69,6 +74,37 @@ const routes: RouteRecordRaw[] = [
         path: 'settings',
         name: 'settings',
         component: SettingsPage,
+        children: [
+          {
+            path: '',
+            redirect: {name: 'settings-general'},
+          },
+          {
+            path: 'general',
+            name: 'settings-general',
+            component: SettingsGeneralPage,
+          },
+          {
+            path: 'units',
+            name: 'settings-units',
+            component: SettingsUnitsListPage,
+          },
+          {
+            path: 'units/create',
+            name: 'settings-units-create',
+            component: SettingsUnitCreatePage,
+          },
+          {
+            path: 'units/:id/edit',
+            name: 'settings-units-edit',
+            component: SettingsUnitEditPage,
+          },
+          {
+            path: 'notifications',
+            name: 'settings-notifications',
+            component: SettingsNotificationsPage,
+          },
+        ],
       },
     ],
   },

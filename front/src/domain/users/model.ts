@@ -1,4 +1,5 @@
 import {z} from 'zod'
+import {unitResponsibleLevelSchema} from '@/domain/units/model'
 
 export const currentUserSchema = z.object({
   id: z.number().int().positive(),
@@ -51,8 +52,36 @@ export const updateCurrentUserPayloadSchema = z
     },
   )
 
+export const userUnitAssignmentSchema = z.object({
+  unit_id: z.number().int().positive(),
+  unit_name: z.string(),
+  level: unitResponsibleLevelSchema,
+})
+
+export const replaceUserUnitAssignmentsPayloadSchema = z.object({
+  assignments: z
+    .array(
+      z.object({
+        unit_id: z.number().int().positive(),
+        level: unitResponsibleLevelSchema,
+      }),
+    )
+    .refine(
+      (assignments) =>
+        new Set(assignments.map((assignment) => assignment.unit_id)).size ===
+        assignments.length,
+      {
+        message: 'assignments.unit_id must be unique',
+      },
+    ),
+})
+
 export type CurrentUser = z.infer<typeof currentUserSchema>
 export type UpdateCurrentUserPayload = z.infer<typeof updateCurrentUserPayloadSchema>
 export type SystemUser = z.infer<typeof systemUserSchema>
 export type CreateSystemUserPayload = z.infer<typeof createSystemUserPayloadSchema>
 export type UpdateSystemUserPayload = z.infer<typeof updateSystemUserPayloadSchema>
+export type UserUnitAssignment = z.infer<typeof userUnitAssignmentSchema>
+export type ReplaceUserUnitAssignmentsPayload = z.infer<
+  typeof replaceUserUnitAssignmentsPayloadSchema
+>

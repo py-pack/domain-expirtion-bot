@@ -1,12 +1,15 @@
 import type {
   CreateSystemUserPayload,
   CurrentUser,
+  ReplaceUserUnitAssignmentsPayload,
   SystemUser,
   UpdateCurrentUserPayload,
   UpdateSystemUserPayload,
+  UserUnitAssignment,
 } from '@/domain/users/model'
 import {
   createSystemUserPayloadSchema,
+  replaceUserUnitAssignmentsPayloadSchema,
   updateSystemUserPayloadSchema,
   updateCurrentUserPayloadSchema,
 } from '@/domain/users/model'
@@ -43,5 +46,17 @@ export const usersService = {
 
   async deleteSystemUser(id: number): Promise<void> {
     return usersRepository.deleteSystemUser(id)
+  },
+
+  async getUserUnitAssignments(userId: number): Promise<UserUnitAssignment[]> {
+    return usersRepository.getUserUnitAssignments(userId)
+  },
+
+  async replaceUserUnitAssignments(
+    userId: number,
+    payload: ReplaceUserUnitAssignmentsPayload,
+  ): Promise<UserUnitAssignment[]> {
+    const validatedPayload = replaceUserUnitAssignmentsPayloadSchema.parse(payload)
+    return usersRepository.replaceUserUnitAssignments(userId, validatedPayload)
   },
 }
