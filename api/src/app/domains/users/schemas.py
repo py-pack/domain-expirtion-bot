@@ -1,6 +1,6 @@
 from typing import Any, Optional
 
-from pydantic import BaseModel, EmailStr, Field, model_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, model_validator
 
 
 class CurrentUserResponse(BaseModel):
@@ -10,6 +10,8 @@ class CurrentUserResponse(BaseModel):
 
 
 class UpdateCurrentUserRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     full_name: str = Field(min_length=1, max_length=255)
     current_password: Optional[str] = Field(default=None, min_length=1)
     new_password: Optional[str] = Field(default=None, min_length=8)

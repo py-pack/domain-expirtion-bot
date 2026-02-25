@@ -3,71 +3,109 @@ name: ui-pages-structure
 description: Use when adding or moving frontend pages. Enforces AGENTS.md canonical page location, naming, and router update rules for `front/`.
 ---
 
-# Purpose
+# When to Use
 
-Use this skill whenever you add, move, or refactor route pages in the frontend.
+Use this skill when you add/refactor route pages in `front/`, especially for CRUD/admin entity pages.
 
-Goals:
-- keep pages discoverable in one canonical location
-- keep router imports stable
-- avoid silent structure drift from `AGENTS.md`
+## Where Pages Live
 
----
-
-# Mandatory Page Location Rules
-
-Pages must follow `AGENTS.md` canonical location:
+Route pages live in:
 
 ```text
 front/src/ui/pages/
 ```
 
-Default page structure (from `AGENTS.md`):
+Current project convention for entity pages:
 
 ```text
 front/src/ui/pages/
-  LoginPage.vue
-  UsersPage.vue
-  SegmentsPage.vue
-  FlowsPage.vue
-  ReportsPage.vue
+  users/
+    UsersListPage.vue
+    UserCreatePage.vue
+    UserEditPage.vue
 ```
 
 Rules:
-- Do not silently introduce a new nested page-folder convention.
-- For new pages, prefer the same canonical flat layout unless user explicitly requests a new structure.
-- If folder organization is required and not specified, stop and ask before changing page layout policy.
+- Keep route pages under `front/src/ui/pages/`.
+- For grouped entity CRUD pages, use a dedicated folder per entity (`users/`, `domains/`, etc.).
+- Use `CamelCase` file names with `Page.vue` suffix for route pages.
+- Do not create alternative page roots (for example `front/src/pages`).
 
-Page naming rule:
-- follow the canonical `*Page.vue` convention already documented in `AGENTS.md`
+## Page Template (Preferred)
 
----
+Use `front/src/ui/layout/UiEntityPageLayout.vue` for management pages.
 
-# Routing Rules
+It provides:
+- page title
+- description as tooltip (via `UiTooltip` + `Teleport`)
+- right-side actions slot
+- breadcrumbs under the title
+- optional meta row
 
-- Update router imports whenever a page is added or moved.
-- Canonical router location is `front/src/app/router/index.ts` per `AGENTS.md`.
-- If the codebase still uses a legacy router path (for example `front/src/router/index.ts`), update the active router and do not create duplicate router modules.
-- Keep route paths stable and descriptive.
+### Basic usage
 
-When moving pages, update all related imports and route records.
+```vue
+<UiEntityPageLayout
+  title="Users"
+  description="System users management"
+  :breadcrumbs="[{ label: 'Users' }]"
+>
+  <template #actions>
+    <UiButton @click="...">Create user</UiButton>
+  </template>
 
----
+  <!-- page content -->
+</UiEntityPageLayout>
+```
 
-# Page Composition Rules
+### Slots
 
-- Page files contain page-level orchestration and layout only.
-- UI components must not contain business logic.
-- Page components must not call axios directly.
-- Server-state flows through repositories/services/query hooks as defined in `AGENTS.md`.
+- `#actions` - buttons/controls rendered on the right side of the header
+- `#meta` - extra contextual text under breadcrumbs (e.g. email + ID on edit page)
+- default slot - page content (tables, forms, states)
 
----
+## Breadcrumbs Pattern
 
-# Refactor Checklist
+Use `UiBreadcrumbs` indirectly via `UiEntityPageLayout` `breadcrumbs` prop.
 
-When adding or moving pages:
-1. Place file in `front/src/ui/pages/` (canonical layout).
-2. Use the canonical `*Page.vue` naming style.
-3. Update router imports and route records.
-4. Verify no direct axios usage was introduced in page code.
-5. Run frontend build/tests relevant to the change.
+Patterns:
+- list page: `[{ label: 'Users' }]`
+- create page: `[{ label: 'Users', to: { name: 'users' } }, { label: 'Create' }]`
+- edit page: `[{ label: 'Users', to: { name: 'users' } }, { label: 'Edit' }]`
+
+Breadcrumb links should navigate back to the entity index page (`name: 'users'`, etc.).
+
+## Router Updates (Required)
+
+Update the active router in:
+
+```text
+front/src/app/router/index.ts
+```
+
+When splitting one page into CRUD pages:
+- add imports for each page file
+- keep route names explicit (`users`, `users-create`, `users-edit`)
+- keep paths predictable (`/users`, `/users/create`, `/users/:id/edit`)
+
+## Page Responsibilities
+
+Page files should contain:
+- route-level orchestration
+- query/mutation hooks (`domain/*/queries.ts`)
+- navigation (`router.push`)
+- layout composition (`UiEntityPageLayout`)
+
+Do not put in page files:
+- direct axios calls
+- reusable UI primitives (extract to `ui/components/common` or domain-specific components)
+
+Layout-level reusable page shells belong in `front/src/ui/layout/` (for example `UiEntityPageLayout.vue`).
+
+## Quick Checklist
+
+1. Place/rename page files under `front/src/ui/pages/<entity>/` in `CamelCase`.
+2. Use `UiEntityPageLayout` for title + tooltip + breadcrumbs + actions.
+3. Add breadcrumbs that link back to the entity index page.
+4. Update `front/src/app/router/index.ts` imports and routes.
+5. Run `npm run type-check` in `front/`.

@@ -7,6 +7,7 @@ import {getApiErrorMessage} from '@/shared/http/errors'
 import UiButton from '@/ui/components/common/UiButton.vue'
 import UiDropdownFilter from '@/ui/components/common/UiDropdownFilter.vue'
 import UiEmptyState from '@/ui/components/common/UiEmptyState.vue'
+import UiEntityPageLayout from '@/ui/layout/UiEntityPageLayout.vue'
 import UiSearchInput from '@/ui/components/common/UiSearchInput.vue'
 import IntegrationsTable from '@/ui/components/integrations/IntegrationsTable.vue'
 
@@ -56,15 +57,15 @@ const errorMessage = computed(() => {
 </script>
 
 <template>
-  <section class="page-card integrations-page">
-    <header class="integrations-page__header">
-      <div>
-        <h1 class="page-title">Integrations</h1>
-        <p class="page-subtitle">Manage provider connections and sync status.</p>
-      </div>
-
+  <UiEntityPageLayout
+    class="integrations-page"
+    title="Integrations"
+    description="Manage provider connections, filtering, and sync status."
+    :breadcrumbs="[{label: 'Integrations'}]"
+  >
+    <template #actions>
       <UiButton> Add integration </UiButton>
-    </header>
+    </template>
 
     <div class="integrations-page__controls">
       <UiSearchInput v-model="searchQuery" placeholder="Search integrations" />
@@ -82,20 +83,13 @@ const errorMessage = computed(() => {
     />
 
     <IntegrationsTable v-else :integrations="filteredIntegrations" />
-  </section>
+  </UiEntityPageLayout>
 </template>
 
 <style scoped lang="scss">
 .integrations-page {
   display: grid;
   gap: var(--space-4);
-
-  &__header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: var(--space-3);
-  }
 
   &__controls {
     display: grid;
@@ -114,10 +108,6 @@ const errorMessage = computed(() => {
   .integrations-page {
     &__controls {
       grid-template-columns: 1fr;
-    }
-
-    &__header {
-      flex-direction: column;
     }
   }
 }

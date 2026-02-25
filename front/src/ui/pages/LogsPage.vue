@@ -1,15 +1,17 @@
 <script setup lang="ts">
+import UiEntityPageLayout from '@/ui/layout/UiEntityPageLayout.vue'
 import UiEmptyState from '@/ui/components/common/UiEmptyState.vue'
 </script>
 
 <template>
-  <section class="page-card">
-    <h1 class="page-title">Logs</h1>
-    <p class="page-subtitle">Security and activity timeline for integrations and auth actions.</p>
-
+  <UiEntityPageLayout
+    title="Logs"
+    description="Security and activity timeline for integrations and authentication events."
+    :breadcrumbs="[{label: 'Logs'}]"
+  >
     <UiEmptyState
       title="Logs feed is not connected yet"
       description="Add the backend log endpoint and bind it through domain repository/query files."
     />
-  </section>
+  </UiEntityPageLayout>
 </template>

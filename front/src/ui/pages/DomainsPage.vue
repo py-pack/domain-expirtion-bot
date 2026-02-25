@@ -5,6 +5,7 @@ import {useDomainExpirationQuery} from '@/domain/domains/queries'
 import {getApiErrorMessage} from '@/shared/http/errors'
 import {formatIsoDate} from '@/shared/utils/time'
 import UiButton from '@/ui/components/common/UiButton.vue'
+import UiEntityPageLayout from '@/ui/layout/UiEntityPageLayout.vue'
 
 const inputDomain = ref('')
 const selectedDomain = ref('')
@@ -42,10 +43,12 @@ function submitDomain(): void {
 </script>
 
 <template>
-  <section class="page-card domains-page">
-    <h1 class="page-title">Domain Expiration</h1>
-    <p class="page-subtitle">Fetch expiration details from the backend `/api/domain/expiration` endpoint.</p>
-
+  <UiEntityPageLayout
+    class="domains-page"
+    title="Domain Expiration"
+    description="Fetch expiration details from the backend /api/domain/expiration endpoint."
+    :breadcrumbs="[{label: 'Domains'}]"
+  >
     <form class="domains-page__form" @submit.prevent="submitDomain">
       <label class="domains-page__input-wrap">
         <Search :size="16" class="domains-page__search-icon" />
@@ -75,7 +78,7 @@ function submitDomain(): void {
     >
       No data received for this domain.
     </p>
-  </section>
+  </UiEntityPageLayout>
 </template>
 
 <style scoped lang="scss">

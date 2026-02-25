@@ -9,18 +9,11 @@ class JWTToken:
         self.access_expire_minutes: int = access_expire_minutes
         self.refresh_expire_days: int = refresh_expire_days
 
-        self.expire_access_at: None | datetime = None
-        self.expire_refresh_at: None | datetime = None
-
     def get_expire_access(self) -> datetime:
-        if not self.expire_access_at:
-            self.expire_access_at = datetime.now(UTC) + timedelta(minutes=self.access_expire_minutes)
-        return self.expire_access_at
+        return datetime.now(UTC) + timedelta(minutes=self.access_expire_minutes)
 
     def get_expire_refresh(self) -> datetime:
-        if not self.expire_refresh_at:
-            self.expire_refresh_at = datetime.now(UTC) + timedelta(days=self.refresh_expire_days)
-        return self.expire_refresh_at
+        return datetime.now(UTC) + timedelta(days=self.refresh_expire_days)
 
     def create_access_token(self, data: dict) -> str:
         return self._create_token(data, self.get_expire_access(), "access")

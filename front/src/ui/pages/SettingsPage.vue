@@ -6,6 +6,7 @@ import {
   useUpdateCurrentUserMutation,
 } from '@/domain/users/queries'
 import UiButton from '@/ui/components/common/UiButton.vue'
+import UiEntityPageLayout from '@/ui/layout/UiEntityPageLayout.vue'
 import UiFormField from '@/ui/components/common/UiFormField.vue'
 
 const currentUserQuery = useCurrentUserQuery()
@@ -97,9 +98,15 @@ async function submitSettings(): Promise<void> {
 </script>
 
 <template>
-  <section class="page-card settings-page">
-    <h1 class="page-title">Account Settings</h1>
-    <p class="page-subtitle">Update your display name and change password.</p>
+  <UiEntityPageLayout
+    class="settings-page"
+    title="Account Settings"
+    description="Update your display name and change the account password."
+    :breadcrumbs="[{label: 'Settings'}]"
+  >
+    <template #meta>
+      <p v-if="email" class="settings-page__meta">Email: {{ email }}</p>
+    </template>
 
     <p v-if="currentUserQuery.isLoading.value" class="settings-page__hint">
       Loading account...
@@ -114,14 +121,6 @@ async function submitSettings(): Promise<void> {
       autocomplete="off"
       @submit.prevent="submitSettings"
     >
-      <UiFormField
-        id="settings-email"
-        label="Email"
-        :model-value="email"
-        type="email"
-        readonly
-      />
-
       <UiFormField
         id="settings-full-name"
         label="Name"
@@ -167,18 +166,18 @@ async function submitSettings(): Promise<void> {
         {{ isSubmitting ? 'Saving...' : 'Save settings' }}
       </UiButton>
     </form>
-  </section>
+  </UiEntityPageLayout>
 </template>
 
 <style scoped lang="scss">
 .settings-page {
   display: grid;
   gap: var(--space-4);
-  max-width: 620px;
 
   &__form {
     display: grid;
     gap: var(--space-3);
+    max-width: 620px;
   }
 
   &__divider {
@@ -200,6 +199,10 @@ async function submitSettings(): Promise<void> {
   &__success {
     color: var(--color-success);
     font-size: 0.875rem;
+  }
+
+  &__meta {
+    margin: 0;
   }
 }
 </style>

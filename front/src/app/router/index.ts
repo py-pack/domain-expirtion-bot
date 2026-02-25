@@ -7,7 +7,9 @@ import IntegrationsPage from '@/ui/pages/IntegrationsPage.vue'
 import DomainsPage from '@/ui/pages/DomainsPage.vue'
 import LogsPage from '@/ui/pages/LogsPage.vue'
 import SettingsPage from '@/ui/pages/SettingsPage.vue'
-import UsersPage from '@/ui/pages/UsersPage.vue'
+import UserCreatePage from '@/ui/pages/users/UserCreatePage.vue'
+import UserEditPage from '@/ui/pages/users/UserEditPage.vue'
+import UsersListPage from '@/ui/pages/users/UsersListPage.vue'
 
 const routes: RouteRecordRaw[] = [
   {
@@ -45,7 +47,17 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'users',
         name: 'users',
-        component: UsersPage,
+        component: UsersListPage,
+      },
+      {
+        path: 'users/create',
+        name: 'users-create',
+        component: UserCreatePage,
+      },
+      {
+        path: 'users/:id/edit',
+        name: 'users-edit',
+        component: UserEditPage,
       },
       {
         path: 'settings',
