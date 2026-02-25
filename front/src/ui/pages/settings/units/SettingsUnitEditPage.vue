@@ -195,7 +195,7 @@ async function saveResponsibles(): Promise<void> {
 
             <UiButton
               type="submit"
-              tone="success"
+              tone="primary"
               :disabled="updateUnitMutation.isPending.value"
             >
               <template #icon>
@@ -237,7 +237,7 @@ async function saveResponsibles(): Promise<void> {
 
           <UiButton
             type="button"
-            tone="success"
+            tone="primary"
             :disabled="
               replaceUnitResponsiblesMutation.isPending.value ||
               usersQuery.isLoading.value ||

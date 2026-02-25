@@ -2,7 +2,7 @@
 withDefaults(
   defineProps<{
     variant?: 'primary' | 'secondary' | 'ghost'
-    tone?: 'default' | 'success' | 'danger' | 'warning'
+    tone?: 'default' | 'primary' | 'success' | 'danger' | 'warning'
     size?: 'sm' | 'md' | 'lg'
     type?: 'button' | 'submit' | 'reset'
     disabled?: boolean

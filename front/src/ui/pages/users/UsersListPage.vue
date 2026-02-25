@@ -78,23 +78,30 @@ async function removeUser(userId: number): Promise<void> {
           <td>{{ user.full_name }}</td>
           <td>{{ user.is_active ? 'Active' : 'Inactive' }}</td>
           <td class="users-page__actions">
-            <UiButton size="sm" variant="ghost" @click="openEditPage(user.id)">
+            <UiButton
+              size="md"
+              variant="ghost"
+              tone="primary"
+              icon-only
+              aria-label="Edit user"
+              @click="openEditPage(user.id)"
+            >
               <template #icon>
                 <Pencil :size="16" />
               </template>
-              Edit
             </UiButton>
             <UiButton
-              size="sm"
+              size="md"
               variant="ghost"
               tone="danger"
+              icon-only
+              aria-label="Delete user"
               :disabled="deleteUserMutation.isPending.value"
               @click="removeUser(user.id)"
             >
               <template #icon>
                 <Trash2 :size="16" />
               </template>
-              Delete
             </UiButton>
           </td>
         </tr>

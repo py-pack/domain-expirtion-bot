@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import {computed} from 'vue'
 import {Plus, Trash2} from 'lucide-vue-next'
 import type {UnitResponsibleLevel} from '@/domain/units/model'
 import UiButton from '@/ui/components/common/UiButton.vue'
@@ -38,6 +39,14 @@ const emit = defineEmits<{
 }>()
 
 const levelOptions: readonly UnitResponsibleLevel[] = ['View', 'Edit', 'Full']
+const selectedUnitIds = computed(() =>
+  props.modelValue
+    .map((row) => row.unitId)
+    .filter((unitId): unitId is number => unitId !== null),
+)
+const canAddRow = computed(
+  () => selectedUnitIds.value.length < props.units.length,
+)
 
 let nextRowId = 1
 
@@ -46,6 +55,10 @@ function updateRows(nextRows: AssignmentRow[]): void {
 }
 
 function addRow(): void {
+  if (!canAddRow.value) {
+    return
+  }
+
   updateRows([
     ...props.modelValue,
     {
@@ -61,6 +74,10 @@ function removeRow(key: string): void {
 }
 
 function updateRowUnit(key: string, unitId: number | null): void {
+  if (unitId !== null && isUnitSelectedInAnotherRow(key, unitId)) {
+    return
+  }
+
   updateRows(
     props.modelValue.map((row) =>
       row.key === key
@@ -71,6 +88,10 @@ function updateRowUnit(key: string, unitId: number | null): void {
         : row,
     ),
   )
+}
+
+function isUnitSelectedInAnotherRow(key: string, unitId: number): boolean {
+  return props.modelValue.some((row) => row.key !== key && row.unitId === unitId)
 }
 
 function updateRowLevel(key: string, level: UnitResponsibleLevel): void {
@@ -137,7 +158,7 @@ function onLevelChange(key: string, event: Event): void {
         size="sm"
         variant="ghost"
         tone="success"
-        :disabled="disabled"
+        :disabled="disabled || loading || !canAddRow"
         @click="addRow"
       >
         <template #icon>
@@ -154,31 +175,43 @@ function onLevelChange(key: string, event: Event): void {
       No unit bindings yet.
     </div>
 
-    <div v-else class="user-unit-repeater__rows">
+    <div v-else class="user-unit-repeater__table">
+      <div class="user-unit-repeater__columns" aria-hidden="true">
+        <span class="user-unit-repeater__column-title">Unit</span>
+        <span class="user-unit-repeater__column-title">Level</span>
+        <span class="user-unit-repeater__column-title user-unit-repeater__column-title--actions" />
+      </div>
+
+      <div class="user-unit-repeater__rows">
       <div
         v-for="row in modelValue"
         :key="row.key"
         class="user-unit-repeater__row"
       >
-        <label class="user-unit-repeater__field">
-          <span class="user-unit-repeater__label">Unit</span>
+        <div class="user-unit-repeater__field">
           <select
             class="user-unit-repeater__select"
+            aria-label="Unit"
             :disabled="disabled || loading"
             :value="row.unitId === null ? '' : String(row.unitId)"
             @change="onUnitChange(row.key, $event)"
           >
             <option value="">Select unit</option>
-            <option v-for="unit in units" :key="unit.id" :value="unit.id">
+            <option
+              v-for="unit in units"
+              :key="unit.id"
+              :value="unit.id"
+              :disabled="row.unitId !== unit.id && isUnitSelectedInAnotherRow(row.key, unit.id)"
+            >
               {{ unit.name }}
             </option>
           </select>
-        </label>
+        </div>
 
-        <label class="user-unit-repeater__field user-unit-repeater__field--level">
-          <span class="user-unit-repeater__label">Level</span>
+        <div class="user-unit-repeater__field user-unit-repeater__field--level">
           <select
             class="user-unit-repeater__select"
+            aria-label="Level"
             :disabled="disabled"
             :value="row.level"
             @change="onLevelChange(row.key, $event)"
@@ -187,13 +220,15 @@ function onLevelChange(key: string, event: Event): void {
               {{ level }}
             </option>
           </select>
-        </label>
+        </div>
 
         <UiButton
           type="button"
-          size="sm"
+          size="md"
           variant="ghost"
           tone="danger"
+          icon-only
+          aria-label="Remove unit binding"
           :disabled="disabled"
           class="user-unit-repeater__remove"
           @click="removeRow(row.key)"
@@ -201,8 +236,8 @@ function onLevelChange(key: string, event: Event): void {
           <template #icon>
             <Trash2 :size="16" />
           </template>
-          Remove
         </UiButton>
+      </div>
       </div>
     </div>
   </section>
@@ -249,6 +284,31 @@ function onLevelChange(key: string, event: Event): void {
     gap: var(--space-2);
   }
 
+  &__table {
+    display: grid;
+    gap: var(--space-2);
+  }
+
+  &__columns {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 140px auto;
+    gap: var(--space-2);
+    align-items: center;
+    padding: 0 var(--space-2);
+  }
+
+  &__column-title {
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 600;
+  }
+
+  &__column-title--actions {
+    width: 36px;
+  }
+
   &__row {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 140px auto;
@@ -257,7 +317,6 @@ function onLevelChange(key: string, event: Event): void {
     padding: var(--space-2);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-sm);
-    background: var(--color-surface-soft);
   }
 
   &__field {
@@ -268,13 +327,6 @@ function onLevelChange(key: string, event: Event): void {
 
   &__field--level {
     min-width: 120px;
-  }
-
-  &__label {
-    color: var(--color-text-muted);
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
   }
 
   &__select {
@@ -293,6 +345,10 @@ function onLevelChange(key: string, event: Event): void {
 
 @media (max-width: 900px) {
   .user-unit-repeater {
+    &__columns {
+      display: none;
+    }
+
     &__row {
       grid-template-columns: 1fr;
       align-items: stretch;

@@ -155,7 +155,7 @@ async function submitProfile(): Promise<void> {
         @update:model-value="confirmPassword = $event"
       />
 
-      <UiButton type="submit" tone="success" :disabled="isSubmitting">
+      <UiButton type="submit" tone="primary" :disabled="isSubmitting">
         <template #icon>
           <Save :size="16" />
         </template>

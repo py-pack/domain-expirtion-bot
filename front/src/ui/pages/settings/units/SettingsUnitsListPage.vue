@@ -64,23 +64,30 @@ async function removeUnit(unitId: number): Promise<void> {
           <td>{{ unit.name }}</td>
           <td>{{ unit.responsibles_count }}</td>
           <td class="settings-units-page__actions">
-            <UiButton size="sm" variant="ghost" @click="openEditPage(unit.id)">
+            <UiButton
+              size="md"
+              variant="ghost"
+              tone="primary"
+              icon-only
+              aria-label="Edit unit"
+              @click="openEditPage(unit.id)"
+            >
               <template #icon>
                 <Pencil :size="16" />
               </template>
-              Edit
             </UiButton>
             <UiButton
-              size="sm"
+              size="md"
               variant="ghost"
               tone="danger"
+              icon-only
+              aria-label="Delete unit"
               :disabled="deleteUnitMutation.isPending.value"
               @click="removeUnit(unit.id)"
             >
               <template #icon>
                 <Trash2 :size="16" />
               </template>
-              Delete
             </UiButton>
           </td>
         </tr>

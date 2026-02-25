@@ -277,7 +277,7 @@ function goBack(): void {
           <UiButton type="button" variant="ghost" @click="goBack">Cancel</UiButton>
           <UiButton
             type="submit"
-            tone="success"
+            tone="primary"
             :disabled="
               updateUserMutation.isPending.value ||
               replaceUserUnitAssignmentsMutation.isPending.value

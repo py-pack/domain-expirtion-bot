@@ -47,8 +47,9 @@ defineProps<{
         <td>
           <UiButton
             type="button"
-            size="sm"
+            size="md"
             variant="ghost"
+            tone="primary"
             icon-only
             aria-label="Edit integration"
           >
