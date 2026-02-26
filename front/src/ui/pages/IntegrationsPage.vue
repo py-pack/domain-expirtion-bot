@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import {computed, ref} from 'vue'
 import {Plus} from 'lucide-vue-next'
-import type {IntegrationStatus} from '@/domain/integrations/model'
+import {
+  integrationProviderOptions,
+  type IntegrationStatus,
+} from '@/domain/integrations/model'
 import {useIntegrationsQuery} from '@/domain/integrations/queries'
-import {integrationsService} from '@/domain/integrations/service'
 import {getApiErrorMessage} from '@/shared/http/errors'
 import UiButton from '@/ui/components/common/UiButton.vue'
 import UiDropdownFilter from '@/ui/components/common/UiDropdownFilter.vue'
@@ -14,39 +16,29 @@ import IntegrationsTable from '@/ui/components/integrations/IntegrationsTable.vu
 
 const searchQuery = ref('')
 const statusFilter = ref<'all' | IntegrationStatus>('all')
-const typeFilter = ref<'all' | string>('all')
+const typeFilter = ref<'all' | (typeof integrationProviderOptions)[number]['value']>('all')
 
-const integrationsQuery = useIntegrationsQuery()
+const queryFilters = computed(() => ({
+  searchQuery: searchQuery.value,
+  statusFilter: statusFilter.value,
+  typeFilter: typeFilter.value,
+}))
 
-const integrations = computed(() => integrationsQuery.data.value ?? [])
-
-const filteredIntegrations = computed(() =>
-  integrationsService.filter(integrations.value, {
-    searchQuery: searchQuery.value,
-    statusFilter: statusFilter.value,
-    typeFilter: typeFilter.value,
-  }),
-)
+const integrationsQuery = useIntegrationsQuery(queryFilters)
+const filteredIntegrations = computed(() => integrationsQuery.data.value ?? [])
 
 const statusOptions = [
   {value: 'all', label: 'All Statuses'},
   {value: 'active', label: 'Active'},
   {value: 'inactive', label: 'Inactive'},
   {value: 'warning', label: 'Warning'},
-  {value: 'error', label: 'Error'},
+  {value: 'ban', label: 'Banned'},
 ]
 
-const typeOptions = computed(() => {
-  const uniqueTypes = [...new Set(integrations.value.map((integration) => integration.type))]
-
-  return [
-    {value: 'all', label: 'All Types'},
-    ...uniqueTypes.map((type) => ({
-      value: type,
-      label: type.charAt(0).toUpperCase() + type.slice(1),
-    })),
-  ]
-})
+const typeOptions = [
+  {value: 'all', label: 'All Types'},
+  ...integrationProviderOptions,
+]
 
 const errorMessage = computed(() => {
   if (!integrationsQuery.error.value) {

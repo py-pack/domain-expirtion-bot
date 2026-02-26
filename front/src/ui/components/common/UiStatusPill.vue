@@ -41,7 +41,7 @@ function toLabel(status: IntegrationStatus): string {
     background: color-mix(in srgb, var(--color-warning), transparent 86%);
   }
 
-  &--error {
+  &--ban {
     color: var(--color-danger);
     background: color-mix(in srgb, var(--color-danger), transparent 86%);
   }

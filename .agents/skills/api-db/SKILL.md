@@ -17,6 +17,7 @@ If schema conflicts with migrations — migrations win, then update the schema f
 - Always open schema first (`api/references/schema.md` if present; otherwise `.agents/skills/api-db/references/schema.md`).
 - Identify tables and join keys explicitly.
 - If adding/changing tables: update migration + update the active schema file.
+- If task touches `account_domains` / `ns_accounts`: preserve enum values, `(name, login)` uniqueness for `account_domains`, and note that `accesses` is provider-specific JSON keyed by `account_domains.name`.
 
 # Code locations
 - SQLAlchemy models / repositories: `api/src/app/` (or `src/app/` if cwd is `api/`)

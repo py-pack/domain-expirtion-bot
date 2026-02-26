@@ -8,6 +8,7 @@ from app.domains.tools.router import tools_router
 from app.domains.auth.router import auth_router
 from app.domains.users.router import users_router
 from app.domains.units.router import units_router
+from app.domains.account_domains.router import account_domains_router
 
 from app.core.config import settings
 
@@ -27,6 +28,7 @@ app.include_router(router=tools_router, prefix='/api/domain', tags=['tools'])
 app.include_router(router=auth_router, prefix='/api/v1/auth', tags=['auth'])
 app.include_router(router=users_router, prefix='/api/v1/users', tags=['users'])
 app.include_router(router=units_router, prefix='/api/v1/units', tags=['units'])
+app.include_router(router=account_domains_router, prefix='/api/v1/account-domains', tags=['account-domains'])
 
 
 @app.get("/")

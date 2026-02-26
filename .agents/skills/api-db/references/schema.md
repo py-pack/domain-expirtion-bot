@@ -113,3 +113,8 @@ erDiagram
 
 * dns_records.dns_type: A | AAAA | CNAME | MX | TEXT
 * logs_update.status: success | error
+* account_domains.name: ukraine_host | name_cheap | go_daddy | whois | cloud_flare
+* account_domains.status: active | inactive | warning | ban
+* account_domains unique: (name, login)
+* account_domains.accesses: provider-specific jsonb settings/credentials
+* ns_accounts unique: (account_id, ns)
